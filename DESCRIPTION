@@ -1,0 +1,55 @@
+Package: easyEWAS
+Title: Perform and visualize EWAS analysis
+Version: 1.0.0
+Authors@R: 
+    c(
+    person(
+    given = "Yuting", 
+    family = "Wang", 
+    email = "ytwang@pku.edu.cn",
+    role = c("aut", "cre")),
+    person(
+    given = "Xu", 
+    family = "Gao", 
+    email = "xu.gao@pku.edu.cn",
+    role = c("aut"))
+    )
+Description: easyEWAS is an R package designed for conducting Epigenome-Wide Association 
+    Study (EWAS) and visualizing results. Users only need to provide sample data, and 
+    methylation values to easily perform EWAS analysis. The package supports two statistical 
+    methods,linear models and linear mixed-effects models. It utilizes the CMplot 
+    package to generate visualizations, including Manhattan plots and QQ plots, 
+    based on EWAS results. Additionally, the use of parallel computing significantly 
+    improves computational efficiency, making it suitable for researchers less 
+    experienced in EWAS or parallel computing.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+biocViews:
+Imports: 
+    boot,
+    boot.pval,
+    CMplot,
+    ddpcr,
+    doParallel,
+    dplyr,
+    foreach,
+    lmerTest,
+    magrittr,
+    parallel,
+    stringr,
+    survival,
+    tictoc,
+    vroom,
+    writexl,
+    clusterProfiler,
+    org.Hs.eg.db,
+    ggplot2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Depends: 
+    R (>= 4.0.0)
+LazyData: true
