@@ -1,7 +1,8 @@
 #' @title  Visualize the results of EWAS analysis
 #' @description Visualize EWAS results based on the CMplot package, including Manhattan
-#' plots, QQ plots, etc. Optional parameters are the same as those in the CMplot function.
-#' @usage plotEWAS(input, pval = "PVAL", ...)
+#' plots, QQ plots, etc. For other detailed drawing parameters, please refer to
+#' \code{\link[CMplot]{CMplot}}.
+#' @usage plotEWAS(input, p = "PVAL", threshold=NULL, threshold=NULL, file="jpg")
 #' @param input An R6 class integrated with all the information obtained from the startEWAS function.
 #' @param p The user needs to specify the name of the p value selected for the result
 #' visualization.

@@ -11,8 +11,7 @@
 #' @param model The statistical models used for EWAS analysis include "lm" (general linear
 #' regression), "lmer" (linear mixed-effects model), and "cox" (Cox proportional hazards model).
 #' The default model is "lm".
-#' @param expo Name of the exposure variable used in the EWAS analysis. The default
-#' is a variable in the example data.
+#' @param expo Name of the exposure variable used in the EWAS analysis.
 #' @param cov Name(s) of covariate(s) used in the EWAS analysis, with each  name separated by
 #' a comma. Ensure there are no space. e.g. "cov1,cov2,cov3".
 #' @param random Random intercept item name, used only when selecting the "lmer" model.
@@ -23,7 +22,7 @@
 #' @param adjustP Whether to calculate adjusted p-values(FDR and Bonferroni correction). The default
 #' is set to TRUE.
 #' @param chipType The Illumina chip versions for user measurement of methylation data,
-#' including "27K", 450K ","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".
+#' including "27K", "450K","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".
 #' @param core The number of cores used during parallel computation. If set to default, it calculates
 #' the maximum number of available physical cores minus 1 and treats this as an operational kernel.
 #' @return input, An R6 class object integrating all information.
@@ -32,7 +31,7 @@
 #' @import parallel
 #' @import foreach
 #' @import doParallel
-#' @import vroom
+#' @importFrom vroom vroom_write
 #' @import stringr
 #' @importFrom survival coxph
 #' @import tictoc
@@ -42,7 +41,7 @@
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
 #' res <- startEWAS(input = res, filename = "default", chipType = "EPICV2", model = "lm",
-#' expo = "default", adjustP = TRUE, core = "default")
+#' expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
 #' }
 startEWAS = function(input,
                     filename ="default",
@@ -279,17 +278,17 @@ startEWAS = function(input,
   message("Start CpG sites annotation ...\n")
   #### set annotation file----
   if(!is.null(chipType) & chipType == "EPICV2"){
-    colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene")
+    colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
       left_join(annotationV2, by = "probe") -> modelres
   }
   if(!is.null(chipType) & chipType == "EPICV1"){
-    colnames(annotationV1) = c("probe","chr","pos","relation_to_island","gene")
+    colnames(annotationV1) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
       left_join(annotationV1, by = "probe") -> modelres
   }
   if(!is.null(chipType) & chipType == "450K"){
-    colnames(annotation450K) = c("probe","chr","pos","relation_to_island","gene")
+    colnames(annotation450K) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
       left_join(annotation450K, by = "probe") -> modelres
   }

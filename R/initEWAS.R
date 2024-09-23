@@ -18,15 +18,12 @@
 initEWAS <- function(outpath = "default"){
   tictoc::tic()
 
-  lubridate::now() -> NowTime
-
   # create R6 class input ----------------------------------------------------
   input <- R6::R6Class(
     "input",
     public = list(
       outpath = NULL,
       Data = list(Expo = NULL,
-                  Anno = NULL,
                   Methy = NULL),
 
       initialize = function(outpath) {
@@ -50,6 +47,8 @@ initEWAS <- function(outpath = "default"){
     print("No such file or directory! Please enter the correct path.")
   }
 
+
+  lubridate::now() -> NowTime
   message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
           NowTime, "\n")
 

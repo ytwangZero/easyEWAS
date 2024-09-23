@@ -4,8 +4,9 @@
 \alias{enrichEWAS}
 \title{Enrichment analyses}
 \usage{
-enrichEWAS(input, filename = "default", method = "GO", filterP = "PVAL", cutoff = 0.05,
-plot = TRUE, plotType = "dot", plotcolor = "pvalue", showCategory= NULL, pAdjustMethod = "BH")
+enrichEWAS(input, filename = "default", method = "GO", ont = "MF", pool = FALSE, filterP = "PVAL",
+cutoff = 0.05, plot = TRUE, plotType = "dot", plotcolor = "pvalue", showCategory= NULL, pAdjustMethod = "BH",
+qvalueCutoff = 0.2)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS or plotEWAS
@@ -22,6 +23,11 @@ this P-value to screen for significance sites and further conduct enrichment ana
 \item{cutoff}{The cutoff value of the P-value used to filter for further enrichment analysis.
 The default is 0.05.}
 
+\item{ont}{When choosing GO enrichment analysis, select the GO sub-ontology for which the enrichment analysis
+will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "MF".}
+
+\item{pool}{If ont='ALL', whether pool 3 GO sub-ontologies.}
+
 \item{plot}{Whether the results of enrichment analysis need to be visualized, the default is TRUE}
 
 \item{plotType}{Whether to draw a bar plot ("bar") or a dot plot ("dot"), the default is "dot".}
@@ -31,19 +37,24 @@ The default is 0.05.}
 
 \item{showCategory}{The number of categories which will be displayed in the plots.}
 
-\item{pvalueCutoff}{Adjusted pvalue cutoff on enrichment tests to report. The defulat is 0.05.}
+\item{pvalueCutoff}{The p-value threshold used to filter enrichment results. Only results that pass
+the p-value test (i.e., those smaller than this value) will be reported. This value refers to the
+p-value before adjustment. The p-value represents the probability of observing the current level of enrichment
+under the assumption of no enrichment. The smaller the p-value, the more significant the enrichment result.}
 
-\item{pAdjustMethod}{one of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
+\item{pAdjustMethod}{The p-value adjustment method used for multiple hypothesis testing, aimed at reducing false
+positives caused by multiple comparisons. One of "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
-\item{qvalueCutoff}{qvalue cutoff on enrichment tests to report as significant. Tests must pass
-i) pvalueCutoff on unadjusted pvalues, ii) pvalueCutoff on adjusted pvalues and iii) qvalueCutoff on
-qvalues to be reported. The default is 0.2.}
+\item{qvalueCutoff}{qvalue cutoff on enrichment tests to report as significant. The q-value is the result
+of controlling the false discovery rate (FDR) and represents the proportion of false positives that
+may occur when conducting multiple tests.Tests must pass i) pvalueCutoff on unadjusted pvalues, ii) pvalueCutoff
+on adjusted pvalues and iii) qvalueCutoff on qvalues to be reported. The default is 0.2.}
 }
 \value{
 input, An R6 class object integrating all information.
 }
 \description{
-Perform GO or KEGG enrichment analysis based on the clusterProfiler package.
+Perform GO or KEGG enrichment analysis based on the \pkg{clusterProfiler} package.
 }
 \examples{
 \dontrun{

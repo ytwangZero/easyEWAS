@@ -3,11 +3,8 @@
 
 <!-- badges: start -->
   <!-- badges: end -->
-
+  
   easyEWAS is a flexible and user-friendly R package that systematically performs EWAS analyses under various study designs, along with downstream analyses and result visualization. It can be easily integrated into various DNA methylation microarray detected by Illumina HumanMethylation Bead Chip (27K, 450K, EPICV1, EPICV2, and MSA), significantly enhancing the accessibility of EWAS analysis.
-
-## Author
-Yuting Wang, Xu Gao (corresponding author)
 
 ## Installation
 

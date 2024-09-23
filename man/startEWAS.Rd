@@ -18,8 +18,7 @@ transEWAS function.}
 regression), "lmer" (linear mixed-effects model), and "cox" (Cox proportional hazards model).
 The default model is "lm".}
 
-\item{expo}{Name of the exposure variable used in the EWAS analysis. The default
-is a variable in the example data.}
+\item{expo}{Name of the exposure variable used in the EWAS analysis.}
 
 \item{cov}{Name(s) of covariate(s) used in the EWAS analysis, with each  name separated by
 a comma. Ensure there are no space. e.g. "cov1,cov2,cov3".}
@@ -36,7 +35,7 @@ of the status variable needs to be specified.}
 is set to TRUE.}
 
 \item{chipType}{The Illumina chip versions for user measurement of methylation data,
-including "27K", 450K ","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".}
+including "27K", "450K","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".}
 
 \item{core}{The number of cores used during parallel computation. If set to default, it calculates
 the maximum number of available physical cores minus 1 and treats this as an operational kernel.}
@@ -54,6 +53,6 @@ res <- initEWAS(outpath = "default")
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
 res <- startEWAS(input = res, filename = "default", chipType = "EPICV2", model = "lm",
-expo = "default", adjustP = TRUE, core = "default")
+expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
 }
 }
