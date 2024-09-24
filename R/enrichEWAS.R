@@ -29,7 +29,7 @@
 #' may occur when conducting multiple tests.Tests must pass i) pvalueCutoff on unadjusted pvalues, ii) pvalueCutoff
 #' on adjusted pvalues and iii) qvalueCutoff on qvalues to be reported. The default is 0.2.
 #' @param ont When choosing GO enrichment analysis, select the GO sub-ontology for which the enrichment analysis
-#' will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "MF".
+#' will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "BP".
 #' @param pool If ont='ALL', whether pool 3 GO sub-ontologies.
 #'
 #' @return input, An R6 class object integrating all information.
@@ -57,7 +57,7 @@ enrichEWAS <- function(input,
                        method = "GO",
                        filterP = "PVAL",
                        cutoff = 0.05,
-                       ont = "MF",
+                       ont = "BP",
                        pool = FALSE,
                        plot = TRUE,
                        plotType = "dot", # bar
@@ -94,8 +94,9 @@ enrichEWAS <- function(input,
 
       enres <- enrichGO(gene = gene,
                         OrgDb = org.Hs.eg.db,
-                        ont="BP",
+                        ont=ont,
                         pvalueCutoff = pvalueCutoff,
+                        pAdjustMethod = pAdjustMethod,
                         qvalueCutoff = qvalueCutoff,
                         readable = TRUE)
       enres@result -> input$enrichres
@@ -106,6 +107,7 @@ enrichEWAS <- function(input,
       enres <- enrichKEGG(gene = gene,
                           organism = "hsa",
                           pvalueCutoff = pvalueCutoff,
+                          pAdjustMethod = pAdjustMethod,
                           qvalueCutoff = qvalueCutoff)
       enres@result -> input$enrichres
     }

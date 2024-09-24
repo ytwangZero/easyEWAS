@@ -30,7 +30,7 @@ plots, QQ plots, etc. For other detailed drawing parameters, please refer to
 res <- initEWAS(outpath = "default")
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
+res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "var", adjustP = TRUE)
 res <- plotEWAS(input = res, p = "PVAL")
 }
 }

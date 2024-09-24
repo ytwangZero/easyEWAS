@@ -24,7 +24,7 @@ this P-value to screen for significance sites and further conduct enrichment ana
 The default is 0.05.}
 
 \item{ont}{When choosing GO enrichment analysis, select the GO sub-ontology for which the enrichment analysis
-will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "MF".}
+will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "BP".}
 
 \item{pool}{If ont='ALL', whether pool 3 GO sub-ontologies.}
 

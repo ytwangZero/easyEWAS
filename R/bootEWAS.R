@@ -35,7 +35,6 @@
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
 #' res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-#' res <- plotEWAS(input = res, pval = "PVAL")
 #' res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
 #' }
 bootEWAS = function(input,
@@ -81,8 +80,9 @@ bootEWAS = function(input,
       return(input)
       stop("")
     }else{
+      colnames(input$Data$Methy)[1] = "probe"
       input$Data$Methy %>%
-        filter(colnames(input$Data$Methy)[1] %in% cpgname) %>%
+        filter(probe %in% cpgname) %>%
         as.data.frame() %>%
         dplyr::select(colnames(input$Data$Methy)[1], input$Data$Expo[[1]]) -> df_beta
       rownames(df_beta) = df_beta[[1]]

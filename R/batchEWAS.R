@@ -29,7 +29,10 @@
 #' @import sva
 #' @import BiocParallel
 #' @examples \dontrun{
-#' res <- batchEWAS(input = res, batch = "batch_name", par.prior=TRUE, ref.batch = NULL,)
+#' res <- initEWAS(outpath = "default")
+#' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
+#' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
+#' res <- batchEWAS(input = res, batch = "batch", par.prior=TRUE, ref.batch = NULL)
 #' }
 batchEWAS = function(input,
                    adjustVar = NULL,

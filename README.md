@@ -25,14 +25,23 @@ getwd()
 # prepare the data file ------
 res <- initEWAS(outpath = "default")
 res <- loadEWAS(input = res,
-                ExpoData = "default",
-                MethyData = "default")
+                ExpoData = sampledata,
+                MethyData = methydata)
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
 
+# remove batch effect -----
+res <- batchEWAS(res,
+                 adjustVar = "cov1,cov2",
+                 batch = "batch",
+                 plot = TRUE,
+                 par.prior = TRUE,
+                 mean.only = FALSE,
+                 ref.batch = NULL)
+                 
 # perform the EWAS analysis ------
 res <- startEWAS(input = res,
                 model = "lm",
-                expo = "default",
+                expo = "var",
                 cov = "cov1,cov2",
                 core = "default")
 
@@ -58,6 +67,20 @@ res <- enrichEWAS(input = res,
                   plotType = "dot",
                   plotcolor = "pvalue",
                   showCategory = 10)
+                  
+# DMR analysis -----
+res <- dmrEWAS(input = res,
+               chipType = "EPICV2",
+               what = "Beta",
+               expo = "var",
+               cov = "cov1,cov2",
+               genome = "hg38",
+               lambda=1000,
+               C = 2,
+               filename = "default",
+               pcutoff = 0.05
+         
+)
 
 ```
 

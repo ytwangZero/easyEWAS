@@ -41,7 +41,6 @@ res <- initEWAS(outpath = "default")
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
 res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-res <- plotEWAS(input = res, pval = "PVAL")
 res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
 }
 }
