@@ -4,7 +4,15 @@
 \alias{plotEWAS}
 \title{Visualize the results of EWAS analysis}
 \usage{
-plotEWAS(input, p = "PVAL", threshold=NULL, threshold=NULL, file="jpg")
+plotEWAS(input, p = "PVAL", threshold=NULL, file=c("jpg","pdf","tiff","png"),
+col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f","#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
+LOG10=TRUE,pch=19,type="p",band=1,axis.cex=1,axis.lwd=1.5,lab.cex=1.5,lab.font=2,plot.type=c("m","c","q","d"),
+r=0.3,cex=c(0.5,1,1),ylab="",ylab.pos=3,xticks.pos=1,threshold.col="red",
+threshold.lwd=1,threshold.lty=2,amplify=FALSE,signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2,
+highlight=NULL,highlight.cex=1,highlight.pch=19,highlight.type="p",highlight.col="red",highlight.text=NULL,
+highlight.text.col="black",highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,chr.border=FALSE,
+chr.labels.angle=0,cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,conf.int=TRUE,conf.int.col=NULL,
+file.name="",dpi=300,height=NULL,width=NULL,main="",main.cex=1.5,main.font=2,box=FALSE,verbose=FALSE)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS function.}
@@ -16,14 +24,128 @@ visualization.}
 not be added.}
 
 \item{file}{The format of the output image file, including "jpg","pdf","tiff", and "png".}
+
+\item{col}{A vector specifies the colors for the chromosomes. If the length of col is shorter than
+the number of chromosomes, the colors will be applied cyclically.}
+
+\item{LOG10}{logical, whether to change the p-value into log10(p-value) scale.}
+
+\item{pch}{a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.}
+
+\item{type}{a character, could be "p" (point), "l" (cross line), "h" (vertical lines) and so on,
+is the same with "type" in \code{\link[plot]{plot}}.}
+
+\item{band}{a number, the size of space between chromosomes, the default is 1.}
+
+\item{axis.cex}{a number, controls the size of ticks labels of X/Y-axis and the ticks labels of axis
+for circle plot.}
+
+\item{axis.lwd}{a number, controls the thickness of X/Y-axis lines and the thickness of axis for circle plot.}
+
+\item{lab.cex}{a number, controls the size of labels of X/Y-axis and the labels of chromosomes for circle plot.}
+
+\item{lab.font}{a number, controls the font of labels of all axis.}
+
+\item{plot.type}{a character or vector, only "d", "c", "m", "q" can be used. if plot.type="d",
+SNP density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
+plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
+if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.}
+
+\item{r}{a number, the radius for the circle (the inside radius), the default is 1.}
+
+\item{cex}{a number or a vector, the size for the points, is the same with "size" in \code{\link[plot]{plot}}, and if
+it is a vector, the first number controls the size of points in circle plot(the default is 0.5), the
+second number controls the size of points in Manhattan plot (the default is 1), the third number controls
+the size of points in Q-Q plot (the default is 1)}
+
+\item{ylab}{a character, the labels for y axis.}
+
+\item{ylab.pos}{the distance between ylab and yaxis.}
+
+\item{xticks.pos}{the distance between labels of x ticks and x axis.}
+
+\item{threshold.col}{a character or vector, the color for the line of threshold levels, it can also
+control the color of the diagonal line of QQplot.}
+
+\item{threshold.lwd}{a number or vector, the width for the line of threshold levels, it can also
+control the thickness of the diagonal line of QQplot.}
+
+\item{threshold.lty}{a number or vector, the type for the line of threshold levels, it can also
+control the type of the diagonal line of QQplot}
+
+\item{amplify}{logical, CMplot can amplify the significant points, if TRUE, then the points bigger
+than the minimal significant level will be amplified, the default: amplify=TRUE.}
+
+\item{signal.cex}{a number, if amplify=TRUE, users can set the size of significant points.}
+
+\item{signal.pch}{a number, if amplify=TRUE, users can set the shape of significant points.}
+
+\item{signal.col}{a character, if amplify=TRUE, users can set the colour of significant points,
+if signal.col=NULL, then the colors of significant points will not be changed.}
+
+\item{signal.line}{a number, the thickness of the lines of significant CpGs cross the circle.}
+
+\item{highlight}{a vector, names of CpGs which need to be highlighted.}
+
+\item{highlight.cex}{a vector, the size of points for CpGs which need to be highlighted.}
+
+\item{highlight.pch}{a vector, the pch of points for CpGs which need to be highlighted.}
+
+\item{highlight.type}{a vector, the type of points for CpGs which need to be highlighted.}
+
+\item{highlight.col}{a vector, the col of points for CpGs which need to be highlighted.}
+
+\item{highlight.text}{a vector, the text which would be added around the highlighted CpGs.}
+
+\item{highlight.text.col}{a vector, the color for added text.}
+
+\item{highlight.text.cex}{a value, the size for added text.}
+
+\item{highlight.text.font}{text font for the highlighted CpGs}
+
+\item{chr.labels}{a vector, the labels for the chromosomes of density plot and Manhattan plot.}
+
+\item{chr.border}{a logical, whether to plot the dot line between chromosomes.}
+
+\item{chr.labels.angle}{a value, rotate tick labels of x-axis for Manhattan plot (-90 < chr.labels.angle < 90).}
+
+\item{cir.axis}{a logical, whether to add the axis of circle Manhattan plot.}
+
+\item{cir.axis.col}{a character, the color of the axis for circle.}
+
+\item{cir.axis.grid}{logical, whether to add axis grid line in circles.}
+
+\item{conf.int}{logical, whether to plot confidence interval on QQ-plot.}
+
+\item{conf.int.col}{character or vector, the color of confidence interval of QQplot.}
+
+\item{file.name}{a character or vector, the names of output files.}
+
+\item{dpi}{a number, the picture resolution for '.jpg', '.npg', and '.tiff' files. The default is 300.}
+
+\item{height}{the height of output files.}
+
+\item{width}{the width of output files.}
+
+\item{main}{character of vector, the title of the plot for manhattan plot and qqplot.}
+
+\item{main.cex}{size of title.}
+
+\item{main.font}{font of title.}
+
+\item{box}{logical, this function draws a box around the current plot.}
+
+\item{verbose}{whether to print the log information.}
 }
 \value{
 input, An R6 class object integrating all information.
 }
 \description{
-Visualize EWAS results based on the CMplot package, including Manhattan
-plots, QQ plots, etc. For other detailed drawing parameters, please refer to
-\code{\link[CMplot]{CMplot}}.
+Visualize EWAS results based on the \code{\link[CMplot]{CMplot}} package, including Manhattan
+plots, QQ plots, etc. Please note that this function only supports plotting a single-layer circular
+Manhattan plot. Additionally, the meaning of each parameter in this function is exactly the same as
+in \code{\link[CMplot]{CMplot}} For more detailed information or to create multi-layer circular Manhattan
+plots, please refer to \code{\link[CMplot]{CMplot}} (https://cran.r-project.org/web/packages/CMplot/index.html).
 }
 \examples{
 \dontrun{
