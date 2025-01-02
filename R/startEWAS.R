@@ -148,8 +148,13 @@ startEWAS = function(input,
                      "lm" = as.formula(paste0("cpg ~ ",paste(colnames(covdata), collapse = " + "))),
                      "lmer" = as.formula(paste0("cpg ~ ",paste(colnames(covdata)[-random_index],
                                                                 collapse = " + "), " + (1 | random)")),
-                     "cox" = as.formula(paste0("Surv(time, status) ~ cpg + ",
-                                                paste(VarCov, collapse = " + ")))
+                     "cox" = {
+                      if(exists("VarCov")){
+                        as.formula(paste0("Surv(time, status) ~ cpg + ", paste(VarCov, collapse = "+")))
+                      }else{
+                        as.formula("Surv(time, status) ~ cpg")
+                      }
+                     }
   )
   formula -> input$formula
 

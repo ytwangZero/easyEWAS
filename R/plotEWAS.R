@@ -1,14 +1,89 @@
 #' @title  Visualize the results of EWAS analysis
-#' @description Visualize EWAS results based on the CMplot package, including Manhattan
-#' plots, QQ plots, etc. For other detailed drawing parameters, please refer to
-#' \code{\link[CMplot]{CMplot}}.
-#' @usage plotEWAS(input, p = "PVAL", threshold=NULL, threshold=NULL, file="jpg")
+#' @description Visualize EWAS results based on the \code{\link[CMplot]{CMplot}} package, including Manhattan
+#' plots, QQ plots, etc. Please note that this function only supports plotting a single-layer circular
+#' Manhattan plot. Additionally, the meaning of each parameter in this function is exactly the same as
+#' in \code{\link[CMplot]{CMplot}} For more detailed information or to create multi-layer circular Manhattan
+#' plots, please refer to \code{\link[CMplot]{CMplot}} (https://cran.r-project.org/web/packages/CMplot/index.html).
+#' @usage plotEWAS(input, p = "PVAL", threshold=NULL, file=c("jpg","pdf","tiff","png"),
+#' col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f","#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
+#' LOG10=TRUE,pch=19,type="p",band=1,axis.cex=1,axis.lwd=1.5,lab.cex=1.5,lab.font=2,plot.type=c("m","c","q","d"),
+#' r=0.3,cex=c(0.5,1,1),ylab="",ylab.pos=3,xticks.pos=1,threshold.col="red",
+#' threshold.lwd=1,threshold.lty=2,amplify=FALSE,signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2,
+#' highlight=NULL,highlight.cex=1,highlight.pch=19,highlight.type="p",highlight.col="red",highlight.text=NULL,
+#' highlight.text.col="black",highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,chr.border=FALSE,
+#' chr.labels.angle=0,cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,conf.int=TRUE,conf.int.col=NULL,
+#' file.name="",dpi=300,height=NULL,width=NULL,main="",main.cex=1.5,main.font=2,box=FALSE,verbose=FALSE)
+#'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS function.
 #' @param p The user needs to specify the name of the p value selected for the result
 #' visualization.
 #' @param threshold The significant threshold.If threshold = 0 or NULL, then the threshold line will
 #' not be added.
 #' @param file The format of the output image file, including "jpg","pdf","tiff", and "png".
+#' @param col A vector specifies the colors for the chromosomes. If the length of col is shorter than
+#' the number of chromosomes, the colors will be applied cyclically.
+#' @param LOG10 logical, whether to change the p-value into log10(p-value) scale.
+#' @param pch a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.
+#' @param type a character, could be "p" (point), "l" (cross line), "h" (vertical lines) and so on,
+#' is the same with "type" in \code{\link[plot]{plot}}.
+#' @param band a number, the size of space between chromosomes, the default is 1.
+#' @param axis.cex a number, controls the size of ticks labels of X/Y-axis and the ticks labels of axis
+#' for circle plot.
+#' @param axis.lwd a number, controls the thickness of X/Y-axis lines and the thickness of axis for circle plot.
+#' @param lab.cex a number, controls the size of labels of X/Y-axis and the labels of chromosomes for circle plot.
+#' @param lab.font a number, controls the font of labels of all axis.
+#' @param plot.type a character or vector, only "d", "c", "m", "q" can be used. if plot.type="d",
+#' SNP density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
+#' plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
+#' if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.
+#' @param r a number, the radius for the circle (the inside radius), the default is 1.
+#' @param cex a number or a vector, the size for the points, is the same with "size" in \code{\link[plot]{plot}}, and if
+#' it is a vector, the first number controls the size of points in circle plot(the default is 0.5), the
+#' second number controls the size of points in Manhattan plot (the default is 1), the third number controls
+#' the size of points in Q-Q plot (the default is 1)
+#' @param ylab a character, the labels for y axis.
+#' @param ylab.pos the distance between ylab and yaxis.
+#' @param xticks.pos 	the distance between labels of x ticks and x axis.
+#' @param threshold.col a character or vector, the color for the line of threshold levels, it can also
+#' control the color of the diagonal line of QQplot.
+#' @param threshold.lwd a number or vector, the width for the line of threshold levels, it can also
+#' control the thickness of the diagonal line of QQplot.
+#' @param threshold.lty a number or vector, the type for the line of threshold levels, it can also
+#' control the type of the diagonal line of QQplot
+#' @param amplify logical, CMplot can amplify the significant points, if TRUE, then the points bigger
+#' than the minimal significant level will be amplified, the default: amplify=TRUE.
+#' @param signal.cex a number, if amplify=TRUE, users can set the size of significant points.
+#' @param signal.pch a number, if amplify=TRUE, users can set the shape of significant points.
+#' @param signal.col a character, if amplify=TRUE, users can set the colour of significant points,
+#' if signal.col=NULL, then the colors of significant points will not be changed.
+#' @param signal.line a number, the thickness of the lines of significant CpGs cross the circle.
+#' @param highlight a vector, names of CpGs which need to be highlighted.
+#' @param highlight.cex a vector, the size of points for CpGs which need to be highlighted.
+#' @param highlight.pch a vector, the pch of points for CpGs which need to be highlighted.
+#' @param highlight.type a vector, the type of points for CpGs which need to be highlighted.
+#' @param highlight.col a vector, the col of points for CpGs which need to be highlighted.
+#' @param highlight.text a vector, the text which would be added around the highlighted CpGs.
+#' @param highlight.text.col a vector, the color for added text.
+#' @param highlight.text.cex a value, the size for added text.
+#' @param highlight.text.font text font for the highlighted CpGs
+#' @param chr.labels a vector, the labels for the chromosomes of density plot and Manhattan plot.
+#' @param chr.border a logical, whether to plot the dot line between chromosomes.
+#' @param chr.labels.angle a value, rotate tick labels of x-axis for Manhattan plot (-90 < chr.labels.angle < 90).
+#' @param cir.axis a logical, whether to add the axis of circle Manhattan plot.
+#' @param cir.axis.col a character, the color of the axis for circle.
+#' @param cir.axis.grid logical, whether to add axis grid line in circles.
+#' @param conf.int logical, whether to plot confidence interval on QQ-plot.
+#' @param conf.int.col character or vector, the color of confidence interval of QQplot.
+#' @param file.name a character or vector, the names of output files.
+#' @param dpi a number, the picture resolution for '.jpg', '.npg', and '.tiff' files. The default is 300.
+#' @param height the height of output files.
+#' @param width the width of output files.
+#' @param main character of vector, the title of the plot for manhattan plot and qqplot.
+#' @param main.cex size of title.
+#' @param main.font font of title.
+#' @param box logical, this function draws a box around the current plot.
+#' @param verbose whether to print the log information.
+#'
 #' @return input, An R6 class object integrating all information.
 #' @export
 #' @import dplyr
@@ -26,8 +101,8 @@ plotEWAS <- function(input,
                      p = "PVAL",
                      threshold=NULL,
                      file=c("jpg","pdf","tiff","png"),
-                     col=c("#4197d8","#f8c120","#413496","#495226",
-                           "#d60b6f","#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
+                     col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f",
+                           "#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
                      bin.size=1e6,bin.breaks=NULL,LOG10=TRUE,pch=19,type="p",band=1,
                      H=1.5,ylim=NULL,axis.cex=1,axis.lwd=1.5,lab.cex=1.5,lab.font=2,
                      plot.type=c("m","c","q","d"),multracks=FALSE,
@@ -82,7 +157,7 @@ plotEWAS <- function(input,
 
 
   lubridate::now() -> NowTime
-  message("Ewas Visualization has completed! \nYou can find results in ",input$outpath, ".\n", NowTime, "\n")
+  message("EWAS Visualization has completed! \nYou can find results in ",input$outpath, ".\n", NowTime, "\n")
 
   tictoc::toc()
 

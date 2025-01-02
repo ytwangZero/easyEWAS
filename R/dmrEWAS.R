@@ -87,10 +87,10 @@ dmrEWAS = function(input,
   design <- model.matrix(ff, data = input$Data$Expo)
 
   # DMR analysis ---
-  message("Starting the differential methylation region analysis. Please be patient...")
+  message("Starting the differentially methylated region analysis. Please be patient...")
   ddpcr::quiet(myannotation <- cpg.annotate("array", dfcpg, arraytype = arraytype, what = what,
                                analysis.type="differential",
-                               design=design, coef=2, fdrCPG = fdrCPG, epicv2Remap = TRUE))
+                               design=design, coef=2, fdr = fdrCPG, epicv2Remap = TRUE))
 
   ddpcr::quiet(dmrcoutput <- dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff))
   ddpcr::quiet(results.ranges <- extractRanges(dmrcoutput, genome = genome))
