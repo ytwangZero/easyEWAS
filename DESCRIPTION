@@ -48,7 +48,8 @@ Imports:
     ggplot2,
     DMRcate,
     sva,
-    R.utils
+    R.utils,
+    BiocParallel
 Suggests: 
     knitr,
     rmarkdown
