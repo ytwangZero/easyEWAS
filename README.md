@@ -78,9 +78,8 @@ res <- dmrEWAS(input = res,
                lambda=1000,
                C = 2,
                filename = "default",
-               pcutoff = 0.05
-         
-)
+               pcutoff = 0.05,
+               epicv2Filter = "mean")
 
 ```
 
