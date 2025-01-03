@@ -2,7 +2,8 @@
 #' @description Perform differential methylation analysis based on the R package \pkg{DMRcate}.
 #' Computes a kernel estimate against a null comparison to identify significantly DMRs.
 #' @usage dmrEWAS(input, chipType = "EPICV2", what = "Beta", expo = NULL, cov = NULL, genome = "hg38",
-#' lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2)
+#' lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2,
+#' epicv2Filter = "mean")
 #'
 #' @param input An R6 class integrated with all the information.
 #' @param chipType The Illumina chip versions for user measurement of methylation data,
@@ -28,6 +29,11 @@
 #' @param pcutoff Used to determine the threshold for DMRs. It is strongly recommended to use the
 #' default (fdr), unless you are confident about the risk of Type I errors (false positives).
 #' @param min.cpgs Minimum number of consecutive CpGs constituting a DMR. Default to 2.
+#' @param epicv2Filter Strategy for filtering probe replicates that map to the same CpG site.
+#' "mean" takes the mean of the available probes; "sensitivity" takes the available probe most
+#' sensitive to methylation change; "precision" either selects the available probe with the
+#' lowest variation from the consensus value (most precise), or takes the mean if that confers
+#' the lowest variation instead, "random" takes a single probe at random from each replicate group.
 #'
 #' @return input, An R6 class object integrating all information.
 #' @export
@@ -49,6 +55,7 @@
 dmrEWAS = function(input,
                    chipType = "EPICV2",
                    what = "Beta",
+                   epicv2Filter = "mean",
                    expo = NULL,
                    cov = NULL,
                    genome = "hg38",
@@ -77,9 +84,9 @@ dmrEWAS = function(input,
   rownames(dfcpg) = input$Data$Methy[[1]]
   if(arraytype == "EPICv2"){
     message("Filtering out position replicates from an EPICv2 beta- or M-matrix. Please be patient...")
-    ddpcr::quiet(dfcpg <- rmPosReps(dfcpg, filter.strategy="mean"))
-    repnum = nrow(input$Data$Methy) - nrow(dfcpg)
-    message("A total of ", repnum,  " replicates have been removed.")
+    # ddpcr::quiet(dfcpg <- rmPosReps(dfcpg, filter.strategy="mean"))
+    # repnum = nrow(input$Data$Methy) - nrow(dfcpg)
+    # message("A total of ", repnum,  " replicates have been removed.")
   }
 
   covname = strsplit(cov, ",")
@@ -90,7 +97,8 @@ dmrEWAS = function(input,
   message("Starting the differentially methylated region analysis. Please be patient...")
   ddpcr::quiet(myannotation <- cpg.annotate("array", dfcpg, arraytype = arraytype, what = what,
                                analysis.type="differential",
-                               design=design, coef=2, fdr = fdrCPG, epicv2Remap = TRUE))
+                               design=design, coef=2, fdr = fdrCPG,
+                               epicv2Remap = TRUE, epicv2Filter = epicv2Filter))
 
   ddpcr::quiet(dmrcoutput <- dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff))
   ddpcr::quiet(results.ranges <- extractRanges(dmrcoutput, genome = genome))
