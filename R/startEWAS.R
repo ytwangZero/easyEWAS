@@ -2,7 +2,8 @@
 #' @description Perform EWAS analysis to obtain the coefficient value, standard
 #' deviation and significance p value (or adjust p value) of each site.
 #' @usage startEWAS(input, filename ="default", model = "lm", expo = "default",
-#' cov = NULL,random = NULL, adjustP = TRUE, core = "default")
+#' cov = NULL,random = NULL, time = NULL, status = NULL, chipType = "EPICV2",
+#' adjustP = TRUE, core = "default")
 #'
 #' @param input An R6 class integrated with all the information obtained from the loadEWAS or
 #' transEWAS function.

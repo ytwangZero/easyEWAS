@@ -1,8 +1,8 @@
 #' @title  Enrichment analyses
 #' @description Perform GO or KEGG enrichment analysis based on the \pkg{clusterProfiler} package.
-#' @usage enrichEWAS(input, filename = "default", method = "GO", ont = "MF", pool = FALSE, filterP = "PVAL",
-#' cutoff = 0.05, plot = TRUE, plotType = "dot", plotcolor = "pvalue", showCategory= NULL, pAdjustMethod = "BH",
-#' qvalueCutoff = 0.2)
+#' @usage enrichEWAS(input, filename = "default", method = "GO", ont = "MF", pool = FALSE,
+#' filterP = "PVAL", cutoff = 0.05, plot = TRUE, plotType = "dot", plotcolor = "pvalue",
+#' showCategory= NULL, pvalueCutoff = 0.05, pAdjustMethod = "BH", qvalueCutoff = 0.2)
 #'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS or plotEWAS
 #' or bootEWAS function.

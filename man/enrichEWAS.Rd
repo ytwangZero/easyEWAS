@@ -4,9 +4,9 @@
 \alias{enrichEWAS}
 \title{Enrichment analyses}
 \usage{
-enrichEWAS(input, filename = "default", method = "GO", ont = "MF", pool = FALSE, filterP = "PVAL",
-cutoff = 0.05, plot = TRUE, plotType = "dot", plotcolor = "pvalue", showCategory= NULL, pAdjustMethod = "BH",
-qvalueCutoff = 0.2)
+enrichEWAS(input, filename = "default", method = "GO", ont = "MF", pool = FALSE,
+filterP = "PVAL", cutoff = 0.05, plot = TRUE, plotType = "dot", plotcolor = "pvalue",
+showCategory= NULL, pvalueCutoff = 0.05, pAdjustMethod = "BH", qvalueCutoff = 0.2)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS or plotEWAS

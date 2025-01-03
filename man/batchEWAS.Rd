@@ -4,7 +4,7 @@
 \alias{batchEWAS}
 \title{Perform batch effect correction}
 \usage{
-batchEWAS(input,adjustVar = NULL,batch = NULL,par.prior = TRUE,
+batchEWAS(input,adjustVar = NULL,batch = NULL, plot = TRUE, par.prior = TRUE,
 mean.only = FALSE,ref.batch = NULL)
 }
 \arguments{

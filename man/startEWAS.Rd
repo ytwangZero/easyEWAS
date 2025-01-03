@@ -5,7 +5,8 @@
 \title{Perform EWAS Analysis}
 \usage{
 startEWAS(input, filename ="default", model = "lm", expo = "default",
-cov = NULL,random = NULL, adjustP = TRUE, core = "default")
+cov = NULL,random = NULL, time = NULL, status = NULL, chipType = "EPICV2",
+adjustP = TRUE, core = "default")
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the loadEWAS or

@@ -5,14 +5,16 @@
 #' in \code{\link[CMplot]{CMplot}} For more detailed information or to create multi-layer circular Manhattan
 #' plots, please refer to \code{\link[CMplot]{CMplot}} (https://cran.r-project.org/web/packages/CMplot/index.html).
 #' @usage plotEWAS(input, p = "PVAL", threshold=NULL, file=c("jpg","pdf","tiff","png"),
-#' col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f","#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
-#' LOG10=TRUE,pch=19,type="p",band=1,axis.cex=1,axis.lwd=1.5,lab.cex=1.5,lab.font=2,plot.type=c("m","c","q","d"),
-#' r=0.3,cex=c(0.5,1,1),ylab="",ylab.pos=3,xticks.pos=1,threshold.col="red",
-#' threshold.lwd=1,threshold.lty=2,amplify=FALSE,signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2,
-#' highlight=NULL,highlight.cex=1,highlight.pch=19,highlight.type="p",highlight.col="red",highlight.text=NULL,
-#' highlight.text.col="black",highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,chr.border=FALSE,
-#' chr.labels.angle=0,cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,conf.int=TRUE,conf.int.col=NULL,
-#' file.name="",dpi=300,height=NULL,width=NULL,main="",main.cex=1.5,main.font=2,box=FALSE,verbose=FALSE)
+#' col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f","#e66519","#d581b7","#83d3ad",
+#' "#7c162c","#26755d"),LOG10=TRUE,pch=19,type="p",band=1,axis.cex=1,axis.lwd=1.5,
+#' lab.cex=1.5,lab.font=2,plot.type=c("m","c","q","d"),r=0.3,cex=c(0.5,1,1),ylab="",
+#' ylab.pos=3,xticks.pos=1,threshold.col="red", threshold.lwd=1,threshold.lty=2,
+#' amplify=FALSE,signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2, highlight=NULL,
+#' highlight.cex=1,highlight.pch=19,highlight.type="p",highlight.col="red",highlight.text=NULL,
+#' highlight.text.col="black",highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,
+#' chr.border=FALSE,chr.labels.angle=0,cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,
+#' conf.int=TRUE,conf.int.col=NULL, file.name="",dpi=300,height=NULL,width=NULL,main="",
+#' main.cex=1.5,main.font=2,box=FALSE,verbose=FALSE)
 #'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS function.
 #' @param p The user needs to specify the name of the p value selected for the result

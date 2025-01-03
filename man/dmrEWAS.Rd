@@ -5,7 +5,8 @@
 \title{Perform Differentially Methylated Region analysis}
 \usage{
 dmrEWAS(input, chipType = "EPICV2", what = "Beta", expo = NULL, cov = NULL, genome = "hg38",
-lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2)
+lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2,
+epicv2Filter = "mean")
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information.}
@@ -14,6 +15,12 @@ lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpg
 including "450K","EPICV1", and "EPICV2". The default is "EPICV2".}
 
 \item{what}{Types of methylation values, including "Beta" and "M". Default to "Beta".}
+
+\item{epicv2Filter}{Strategy for filtering probe replicates that map to the same CpG site.
+"mean" takes the mean of the available probes; "sensitivity" takes the available probe most
+sensitive to methylation change; "precision" either selects the available probe with the
+lowest variation from the consensus value (most precise), or takes the mean if that confers
+the lowest variation instead, "random" takes a single probe at random from each replicate group.}
 
 \item{expo}{Name of the exposure variable used in the DMR analysis.}
 
