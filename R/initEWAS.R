@@ -10,7 +10,7 @@
 #' @return input, an R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import tictoc
+#' @importFrom tictoc tic toc
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' }

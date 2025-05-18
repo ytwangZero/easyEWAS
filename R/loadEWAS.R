@@ -21,8 +21,8 @@
 #' @return input, an R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import stringr
-#' @import tictoc
+#' @import magrittr
+#' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
@@ -41,7 +41,7 @@ loadEWAS <- function(input,
 
 
   condition1 = is.null(ExpoPath) & is.null(MethyPath)
-  condition2 = all(class(ExpoData) == "character", class(MethyData) == "character")
+  condition2 = is.character(ExpoData) && is.character(MethyData)
   if(!condition1){
     #### external environment data----
     ExpoPath -> input$ExpoPath
@@ -52,7 +52,7 @@ loadEWAS <- function(input,
     if(all(flag01,flag02)){
       #read data ---------------------------------------------------------------
       ddpcr::quiet(
-        if(stringr::str_sub(ExpoPath,-4,-1) == "xlsx"){
+        if(substr(ExpoPath,nchar(ExpoPath)-3,nchar(ExpoPath)) == "xlsx"){
           readxl::read_xlsx(ExpoPath) %>% as.data.frame() -> input$Data$Expo
         }else{
           vroom::vroom(ExpoPath, delim = ",",show_col_types = F) %>%
@@ -61,7 +61,7 @@ loadEWAS <- function(input,
 
 
       ddpcr::quiet(
-        if(stringr::str_sub(MethyPath,-4,-1) == "xlsx"){
+        if(substr(ExpoPath,nchar(ExpoPath)-3,nchar(ExpoPath))){
           readxl::read_xlsx(MethyPath) %>% as.data.frame() -> input$Data$Methy
         }else{
           vroom::vroom(MethyPath, delim = ",",show_col_types = F) %>%
@@ -78,7 +78,7 @@ loadEWAS <- function(input,
 
     }else{
       lubridate::now() -> NowTime
-      message("No such file or directory! Please enter the correct path. \n", NowTime, "\n")
+      message("Error: No such file or directory! Please enter the correct path. \n", NowTime, "\n")
 
       tictoc::toc()
 
@@ -90,11 +90,11 @@ loadEWAS <- function(input,
       #### example data------
       if(ExpoData == "default" & MethyData == "default"){
 
-        data("sampledata")
+        data("sampledata", package = "easyEWAS", envir = environment())
         sampledata -> input$Data$Expo
         # rm("sampledata")
 
-        data("methydata")
+        data("methydata", package = "easyEWAS", envir = environment())
         methydata -> input$Data$Methy
         # rm("methydata")
 
@@ -106,7 +106,7 @@ loadEWAS <- function(input,
 
       }else{
         lubridate::now() -> NowTime
-        message("Unrecognized characters were entered at ExpoData or MethyData! \n", NowTime, "\n")
+        message("Error: Unrecognized characters were entered at ExpoData or MethyData! \n", NowTime, "\n")
         tictoc::toc()
 
         return(input)
@@ -129,9 +129,6 @@ loadEWAS <- function(input,
 
 
   }
-
-
-
 
 
 
