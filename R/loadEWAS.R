@@ -61,7 +61,7 @@ loadEWAS <- function(input,
 
 
       ddpcr::quiet(
-        if(substr(ExpoPath,nchar(ExpoPath)-3,nchar(ExpoPath))){
+        if(substr(ExpoPath,nchar(ExpoPath)-3,nchar(ExpoPath)) == "xlsx"){
           readxl::read_xlsx(MethyPath) %>% as.data.frame() -> input$Data$Methy
         }else{
           vroom::vroom(MethyPath, delim = ",",show_col_types = F) %>%
@@ -78,7 +78,7 @@ loadEWAS <- function(input,
 
     }else{
       lubridate::now() -> NowTime
-      message("Error: No such file or directory! Please enter the correct path. \n", NowTime, "\n")
+      stop("Error: No such file or directory! Please enter the correct path. \n", NowTime, "\n")
 
       tictoc::toc()
 
@@ -106,7 +106,7 @@ loadEWAS <- function(input,
 
       }else{
         lubridate::now() -> NowTime
-        message("Error: Unrecognized characters were entered at ExpoData or MethyData! \n", NowTime, "\n")
+        stop("Error: Unrecognized characters were entered at ExpoData or MethyData! \n", NowTime, "\n")
         tictoc::toc()
 
         return(input)

@@ -9,8 +9,7 @@
 #' @return input, An R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import stringr
-#' @import tictoc
+#' @importFrom tictoc tic toc
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
@@ -23,9 +22,21 @@ transEWAS <- function(input,
   tictoc::tic()
 
   lubridate::now() -> NowTime
-
+  
+  if (!TypeTo %in% c("numeric", "factor")) {
+    stop("Error: 'TypeTo' must be either 'numeric' or 'factor'.")
+  }
+  
 
   VarName = unlist(strsplit(Vars,","))
+  
+  missing_vars <- setdiff(VarName, colnames(input$Data$Expo))
+  if (length(missing_vars) > 0) {
+    stop("Error: The following variables are not found in the exposure data: ",
+         paste(missing_vars, collapse = ", "))
+  }
+  
+  
   if(all(VarName == "default")){
     VarName = "cov1"
   }
@@ -35,7 +46,7 @@ transEWAS <- function(input,
 
     tictoc::toc()
 
-    print("Error: No exposure data or methylation data were found!")
+    stop("Error: No exposure data or methylation data were found!")
 
     return(input)
 
