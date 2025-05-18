@@ -21,7 +21,7 @@
 #' @return input, an R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import magrittr
+#' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
 #' @examples \dontrun{
