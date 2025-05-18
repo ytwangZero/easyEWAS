@@ -10,7 +10,6 @@
 #' @return input, an R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import stringr
 #' @import tictoc
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
@@ -38,20 +37,20 @@ initEWAS <- function(outpath = "default"){
 
   # set output file path---------------
   if(outpath == "default"){
-    stringr::str_c(getwd(),"/EWASresult") -> input$outpath
+    file.path(getwd(), "EWASresult") -> input$outpath
     dir.create(input$outpath)
+    lubridate::now() -> NowTime
+    message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
+            NowTime, "\n")
   }else if(outpath != "default" & file.exists(outpath)){
-    stringr::str_c(outpath,"/EWASresult") -> input$outpath
+    input$outpath <- file.path(outpath, "EWASresult") -> input$outpath
     dir.create(input$outpath)
+    lubridate::now() -> NowTime
+    message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
+            NowTime, "\n")
   }else if(outpath != "default" & !file.exists(outpath)){
-    print("No such file or directory! Please enter the correct path.")
+    stop("Invalid path: '", outpath, "'. Please provide a valid existing directory.")
   }
-
-
-  lubridate::now() -> NowTime
-  message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
-          NowTime, "\n")
-
 
   tictoc::toc()
 
