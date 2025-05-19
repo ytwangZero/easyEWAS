@@ -1,6 +1,6 @@
 .onAttach <- function(libname, pkgname) {
   packageStartupMessage(
-    "Welcome! Thank you for using the R package easyEWAS! \n"
+    "Welcome! Thank you for using the R package easyEWAS! \n",
     "\n",
     " ____ ____ ____ ____ ____ ____ ____ ____ \n",
     "||E |||A |||S |||Y |||E |||W |||A |||S ||\n",
