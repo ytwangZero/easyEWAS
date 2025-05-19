@@ -7,6 +7,8 @@
     "||__|||__|||__|||__|||__|||__|||__|||__||\n",
     "|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|\n",
     "\n",
-    "Detailed guidance can be found at 'https://easyewas.github.io/'.\nPlease cite us: Wang Y, Jiang M, Niu S, Gao X. easyEWAS: a flexible and user-friendly R package for epigenome-wide association study[J]. Bioinformatics Advances, 2025, 5(1): vbaf026.")
+    "Authors: Yuting Wang, Xu Gao (Corresponding author).",
+    "Documentation:https://easyewas.github.io/.",
+    "Citation: Wang Y, Jiang M, Niu S, Gao X. easyEWAS: a flexible and user-friendly R package for epigenome-wide association study[J]. Bioinformatics Advances, 2025, 5(1): vbaf026.")
 }
 
