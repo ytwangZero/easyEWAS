@@ -17,16 +17,16 @@ devtools::install_github("ytwangZero/easyEWAS")
 💡 **Recommended installation method for easyEWAS**
 
 If you are not familiar with installing R packages for bioinformatics, or if the installation using  
-`devtools::install_github("ytwangZero/easyEWAS")` fails, the issue is likely due to missing dependencies —  
-especially Bioconductor packages, which are not always installed automatically.
+`devtools::install_github("ytwangZero/easyEWAS")` fails, the problem is often caused by missing dependencies.  
+In particular, some Bioconductor packages required by `easyEWAS` are not installed automatically with GitHub-based installation.
 
-To avoid these problems, we strongly recommend installing easyEWAS using the installation script provided below.  
-This script will:
+To avoid these issues, we strongly recommend installing easyEWAS using the installation script provided below.  
+This script will perform the following steps:
 
 - Check your R version
-- Set up the correct Bioconductor version
-- Automatically install all required CRAN and Bioconductor packages
-- Install the `easyEWAS` package from GitHub
+- Configure the appropriate Bioconductor version
+- Install all necessary CRAN and Bioconductor packages
+- Install the easyEWAS package from GitHub
 
 📥 Download the script from the following link:  
 🔗 [Install_easyEWAS.R](https://github.com/ytwangZero/easyEWAS/blob/main/Install_easyEWAS.R)
