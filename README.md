@@ -10,7 +10,7 @@
 
 You can install the development version of easyEWAS like so:
   
-  ``` r
+``` r
 devtools::install_github("ytwangZero/easyEWAS")
 ```
 
@@ -25,14 +25,14 @@ Save this file to your current R working directory, then run:
 
 ```r
 source("Install_easyEWAS.R")
-
+``` 
 
 
 ## Example
 
 This is an example of performing an EWAS analysis using internal sample data and methylation data with easyEWAS.
   
-  ``` r
+``` r
 library(easyEWAS)
 getwd()
 
