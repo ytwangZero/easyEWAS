@@ -14,8 +14,7 @@ You can install the development version of easyEWAS like so:
 devtools::install_github("ytwangZero/easyEWAS")
 ```
 
-If installing `easyEWAS` directly using `devtools::install_github()` fails, it's likely due to missing dependencies, especially from Bioconductor.  
-Since `easyEWAS` relies on many Bioconductor packages, we strongly recommend using the installation script to ensure everything is set up properly. You can download the script from the following link::  🔗 [Install_easyEWAS.R](https://github.com/ytwangZero/easyEWAS_materials/blob/main/Install_easyEWAS.R)  
+If installing `easyEWAS` directly using `devtools::install_github()` fails, it is most likely due to missing dependencies—particularly Bioconductor packages, which are not automatically installed in some cases. To avoid such issues, we **strongly recommend** installing `easyEWAS` via the provided installation script, which will automatically handle all required dependencies for you. You can download the script from the following link::  🔗 [Install_easyEWAS.R](https://github.com/ytwangZero/easyEWAS_materials/blob/main/Install_easyEWAS.R)  
 
 Save this file to your current R working directory, then run:
 
