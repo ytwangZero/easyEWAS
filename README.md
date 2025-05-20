@@ -14,7 +14,7 @@ You can install the development version of easyEWAS like so:
 devtools::install_github("ytwangZero/easyEWAS")
 ```
 
-or you can run:
+Or you can run:
 
 ``` r
 remotes::install_github("ytwangZero/easyEWAS")
