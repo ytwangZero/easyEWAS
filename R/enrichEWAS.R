@@ -42,6 +42,7 @@
 #' @import writexl
 #' @importFrom ggplot2 ggsave
 #' @importFrom R.utils setOption
+#' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")

@@ -11,6 +11,7 @@
 #' @export
 #' @import dplyr
 #' @importFrom tictoc tic toc
+#' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' }

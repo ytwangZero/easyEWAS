@@ -28,6 +28,7 @@
 #' @import boot.pval
 #' @import survival
 #' @importFrom lmerTest lmer
+#' @importFrom lubridate now
 #'
 #'
 #' @examples \dontrun{

@@ -11,6 +11,7 @@
 #' @import dplyr
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
+#' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")

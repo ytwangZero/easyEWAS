@@ -55,5 +55,5 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 Depends: 
-    R (>= 4.0.0)
+    R (>= 4.4.0)
 LazyData: true

@@ -43,6 +43,7 @@
 #' @import stringr
 #' @import tictoc
 #' @import DMRcate
+#' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")

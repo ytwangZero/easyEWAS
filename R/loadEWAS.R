@@ -24,6 +24,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
+#' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")

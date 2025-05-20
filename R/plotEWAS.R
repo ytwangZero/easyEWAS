@@ -91,6 +91,7 @@
 #' @import dplyr
 #' @import CMplot
 #' @import tictoc
+#' @importFrom lubridate now
 #'
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")

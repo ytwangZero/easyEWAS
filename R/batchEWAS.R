@@ -21,7 +21,7 @@
 #' "cov1,cov2".
 #' @param parallel Logical. Whether to enable parallel computing during batch effect correction. 
 #' Default is \code{FALSE}.
-#' @param cores Integer. Number of CPU cores to use if \code{parallel = TRUE}. Default is \code{NULL}.
+#' @param core Integer. Number of CPU cores to use if \code{parallel = TRUE}. Default is \code{NULL}.
 #'
 #' @return input, An R6 class object integrating all information.
 #' @export
@@ -29,8 +29,9 @@
 #' @importFrom ddpcr quiet
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
+#' @importFrom lubridate now
 #' @importFrom sva ComBat
-#' @import BiocParallel bpparam SnowParam MulticoreParam
+#' @importFrom BiocParallel bpparam SnowParam MulticoreParam
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
@@ -45,7 +46,7 @@ batchEWAS = function(input,
                    mean.only = FALSE,
                    ref.batch = NULL,
                    parallel = FALSE,
-                   cores = NULL
+                   core = NULL
                    ){
 
   tictoc::tic()
@@ -78,11 +79,11 @@ batchEWAS = function(input,
     if(parallel){
       
       if (.Platform$OS.type == "windows") {
-        BPPARAM <- BiocParallel::SnowParam(workers = cores)
+        BPPARAM <- BiocParallel::SnowParam(workers = core)
       } else {
-        BPPARAM <- BiocParallel::MulticoreParam(workers = cores)
+        BPPARAM <- BiocParallel::MulticoreParam(workers = core)
       }
-      message("Running ComBat in parallel using ", cores, " core(s).")
+      message("Running ComBat in parallel using ", core, " core(s).")
       
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                          batch = batch,
@@ -112,11 +113,11 @@ batchEWAS = function(input,
     if(parallel){
       
       if (.Platform$OS.type == "windows") {
-        BPPARAM <- BiocParallel::SnowParam(workers = cores)
+        BPPARAM <- BiocParallel::SnowParam(workers = core)
       } else {
-        BPPARAM <- BiocParallel::MulticoreParam(workers = cores)
+        BPPARAM <- BiocParallel::MulticoreParam(workers = core)
       }
-      message("Running ComBat in parallel using ", cores, " core(s).")
+      message("Running ComBat in parallel using ", core, " core(s).")
       
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                               batch = batch,
