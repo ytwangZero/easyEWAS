@@ -17,17 +17,22 @@ of other factors are appropriately considered and adjusted for.Ensure there are 
 
 \item{batch}{Name of the batch variable.}
 
-\item{plot}{(Optional) TRUE give prior plots with black as a kernel estimate of the empirical
+\item{plot}{Logical. TRUE give prior plots with black as a kernel estimate of the empirical
 batch effect density and red as the parametric.}
 
-\item{par.prior}{(Optional) TRUE indicates parametric adjustments will be used, FALSE indicates
+\item{par.prior}{Logical. TRUE indicates parametric adjustments will be used, FALSE indicates
 non-parametric adjustments will be used.}
 
-\item{mean.only}{(Optional) Default to FALSE. If TRUE ComBat only corrects the mean of the
+\item{mean.only}{Logical. Default to FALSE. If TRUE, ComBat only corrects the mean of the
 batch effect (no scale adjustment).}
 
 \item{ref.batch}{(Optional) NULL If given, will use the selected batch as a reference for batch
 adjustment.}
+
+\item{parallel}{Logical. Whether to enable parallel computing during batch effect correction.
+Default is \code{FALSE}.}
+
+\item{core}{Integer. Number of CPU cores to use if \code{parallel = TRUE}. Default is \code{NULL}.}
 }
 \value{
 input, An R6 class object integrating all information.

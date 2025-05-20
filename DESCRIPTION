@@ -38,7 +38,6 @@ Imports:
     lmerTest,
     magrittr,
     parallel,
-    stringr,
     survival,
     tictoc,
     vroom,
@@ -49,7 +48,8 @@ Imports:
     DMRcate,
     sva,
     R.utils,
-    BiocParallel
+    BiocParallel,
+    lubridate
 Suggests: 
     knitr,
     rmarkdown
