@@ -36,9 +36,9 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @import parallel detectCores makeCluster stopCluster
-#' @import foreach foreach %dopar%
-#' @import doParallel registerDoParallel stopImplicitCluster
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom foreach foreach %dopar%
+#' @importFrom doParallel registerDoParallel stopImplicitCluster
 #' @importFrom vroom vroom_write
 #' @importFrom survival coxph
 #' @importFrom lmerTest lmer
@@ -65,10 +65,23 @@ startEWAS = function(input,
   
   message("It will take some time, please be patient...")
   
+  # -------------------------------------------
+  # Set number of cores for parallel processing
+  # -------------------------------------------
+  if(core == "default"){
+    no_cores = detectCores(logical=F) - 1
+  }else{
+    no_cores = core
+  }
+  
+  # -----------------------------
+  # Set exposure variable name
+  # -----------------------------
   expo <- if (is.null(expo) || expo == "default") "var" else expo
   
-  # peform EWAS analysis--------------------------------------------------------
-  ## calculate factor number
+  # ----------------------------------------------------------
+  # Check if exposure is a factor and compute number of levels
+  # ----------------------------------------------------------
   expo_vec <- unlist(input$Data$Expo[, expo])
   facnum <- if (is.factor(expo_vec)) length(levels(expo_vec)) else 2
   if (!is.factor(expo_vec) && model %in% c("lm", "lmer") && length(unique(expo_vec)) <= 4) {
@@ -78,7 +91,9 @@ startEWAS = function(input,
   }
   
   
-  ## define ewas function-----
+  # ----------------------------------------------------------
+  # Define EWAS model fitting function based on selected model
+  # ----------------------------------------------------------
   ewasfun <- function(cg, ff, cov) {
     cov$cpg <- as.vector(t(cg))
     res <- tryCatch({
@@ -102,7 +117,9 @@ startEWAS = function(input,
   }
   model -> input$model
   
-  ## set ewas parameter
+  # -----------------------------
+  # Prepare covariate data
+  # -----------------------------
   VarCov <- if (!is.null(cov)) unlist(strsplit(cov, ",")) else character(0)
   required_cols <- switch(model,
                           "lm"   = c(expo, VarCov),
@@ -111,7 +128,7 @@ startEWAS = function(input,
   )
   covdata <- input$Data$Expo[, required_cols, drop = FALSE]
   
-  
+  # Rename variables based on model needs
   if (model == "lmer") {
     colnames(covdata)[match(random, colnames(covdata))] <- "random"
     input$random <- random
@@ -123,7 +140,9 @@ startEWAS = function(input,
   }
   input$covdata <- covdata
   
-  
+  # -----------------------------
+  # Build model formula
+  # -----------------------------
   formula <- switch (model,
                      "lm" = as.formula(paste0("cpg ~ ",paste(colnames(covdata), collapse = " + "))),
                      "lmer" = as.formula(paste0("cpg ~ ",paste(colnames(covdata)[-random_index], collapse = " + "), " + (1 | random)")),
@@ -137,49 +156,67 @@ startEWAS = function(input,
   )
   formula -> input$formula
   
+  # --------------------------------
+  # Extract methylation beta matrix
+  # --------------------------------
   sample_names <- input$Data$Expo[[1]]
   df_beta <- input$Data$Methy[, sample_names, drop = FALSE]
   rownames(df_beta) <- input$Data$Methy[[1]]
   
-  ## set parallel parameters----
+  # -----------------------------
+  # Set up parallel computation
+  # -----------------------------
   message("Start the EWAS analysis...")
-  if (core == "default") {
-    no_cores <- parallel::detectCores(logical = FALSE) - 1
-  } else {
-    no_cores <- core
-  }
-  future::plan(multisession, workers = no_cores)
-  
-  process_one <- function(idx) {
-    tryCatch({
-      cg <- df_beta[idx, , drop = FALSE]
-      result <- ewasfun(cg, formula, covdata)
-      as.numeric(result)
-    }, error = function(e) {
-      rep(NA_real_, result_cols)
-    })
-  }
+  len = nrow(df_beta)
+  chunk.size <- ceiling(len/no_cores)
+  result_cols <- switch(model,
+                        "lm" = 3 * (facnum - 1),
+                        "lmer" = 3 * (facnum - 1),
+                        "cox" = 4)
   
   
+  cl <- makeCluster(no_cores)
+  registerDoParallel(cl)
+  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
+  
+  if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
+  if (model == "cox") clusterEvalQ(cl, library(survival))
+  
+  # --------------------------------
+  # Run parallel EWAS model fitting
+  # --------------------------------
   system.time(
-    modelres_list <- furrr::future_map(1:nrow(df_beta), process_one, .options = furrr::furrr_options(seed = TRUE))
+    
+    modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+      {
+        restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+        for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+          restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+        }
+        restemp
+      }
   )
-  modelres <- do.call(rbind, modelres_list)
-  rownames(modelres) <- rownames(df_beta)
+  
+  
+  stopImplicitCluster()
+  stopCluster(cl)
+  modelres = modelres[1:len,]
   
   
   
-  ## tidy result---------
+  # -----------------------------
+  # Post-processing results
+  # -----------------------------
   if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) == "factor"){
     
-    ### categorical variable-----
+    ## categorical variable-----
     modelres %>%
       as.data.frame() %>%
       purrr::set_names(paste(rep(c("BETA","SE","PVAL"),facnum-1),rep(1:(facnum-1),each = 3), sep = "_")) %>%
       mutate(probe = rownames(df_beta)) %>%
       dplyr::select(probe, everything()) -> modelres
     
-    #### FDR---
+    ## FDR pr Bonferroni adjustment---
     if(adjustP){
       FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
       pindex = grep("PVAL",colnames(modelres))
@@ -198,13 +235,13 @@ startEWAS = function(input,
     
   }else if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) != "factor"){
     
-    ### continuous variable-----
+    ## continuous variable-----
     modelres %>%
       as.data.frame() %>%
       purrr::set_names("BETA","SE","PVAL") %>%
       mutate(probe = rownames(df_beta))-> modelres
     
-    #### per SD & IQR---
+    ## per SD & IQR---
     modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
     modelres$BETA_perIQR = (modelres$BETA)*(IQR(covdata[[expo]],na.rm = TRUE))
     modelres$SE_perSD = (modelres$SE)*(sd(covdata[[expo]],na.rm = TRUE))
@@ -212,7 +249,7 @@ startEWAS = function(input,
     modelres %>%
       dplyr::select(probe,BETA,BETA_perSD,BETA_perIQR,SE,SE_perSD,SE_perIQR,PVAL) -> modelres
     
-    #### FDR---
+    ## FDR pr Bonferroni adjustment---
     if(adjustP){
       message("Start multiple testing correction ...\n")
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
@@ -229,7 +266,7 @@ startEWAS = function(input,
       mutate(probe = rownames(df_beta)) %>%
       dplyr::select(probe, everything())-> modelres
     
-    #### FDR---
+    ##  FDR pr Bonferroni adjustment---
     if(adjustP){
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
@@ -237,8 +274,11 @@ startEWAS = function(input,
     }
   }
   
+  
+  # ---------------------------------
+  # Annotate CpG sites with chip info
+  # --------------------------------
   message("Start CpG sites annotation ...\n")
-  #### set annotation file----
   if(!is.null(chipType) & chipType == "EPICV2"){
     colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
@@ -266,7 +306,9 @@ startEWAS = function(input,
   }
   
   
-  # save model result-----
+  # -----------------------------
+  # Save results to CSV
+  # -----------------------------
   modelres -> input$result
   if(filename == "default"){
     vroom::vroom_write(modelres, paste0(input$outpath, "/ewasresult.csv"), ",")

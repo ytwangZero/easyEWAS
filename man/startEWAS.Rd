@@ -12,34 +12,42 @@ adjustP = TRUE, core = "default")
 \item{input}{An R6 class integrated with all the information obtained from the loadEWAS or
 transEWAS function.}
 
-\item{filename}{User-customized .csv file name for storing EWAS results. If
-"default" is chosen, it will be named as "ewasresult".}
+\item{filename}{filename Name of the output CSV file to store EWAS results. If set to "default",
+the file will be named "ewasresult.csv" and saved in the specified output directory.}
 
-\item{model}{The statistical models used for EWAS analysis include "lm" (general linear
-regression), "lmer" (linear mixed-effects model), and "cox" (Cox proportional hazards model).
-The default model is "lm".}
+\item{model}{Statistical model to use for EWAS analysis. Options include:
+\itemize{
+\item "lm": Linear regression (default)
+\item "lmer": Linear mixed-effects model
+\item "cox": Cox proportional hazards model
+}}
 
 \item{expo}{Name of the exposure variable used in the EWAS analysis.}
 
-\item{cov}{Name(s) of covariate(s) used in the EWAS analysis, with each  name separated by
-a comma. Ensure there are no space. e.g. "cov1,cov2,cov3".}
+\item{cov}{Comma-separated list of covariate variable names to include in the model (e.g.,
+"age,sex,bmi"). Do not include spaces between names. Optional.}
 
-\item{random}{Random intercept item name, used only when selecting the "lmer" model.}
+\item{random}{Name of the grouping variable for the random intercept, required only when using
+the "lmer" model.}
 
-\item{time}{When the user selects the Cox proportional risk model, the name
-of the time variable needs to be specified.}
+\item{time}{Name of the time-to-event variable, required only when using the "cox" model.}
 
-\item{status}{When the user selects the Cox proportional risk model, the name
-of the status variable needs to be specified.}
+\item{status}{Name of the event/censoring indicator variable, required only when using the "cox" model.}
 
-\item{adjustP}{Whether to calculate adjusted p-values(FDR and Bonferroni correction). The default
-is set to TRUE.}
+\item{adjustP}{Logical. If TRUE (default), adjusts p-values using both FDR (Benjamini-Hochberg) and
+Bonferroni correction methods.}
 
-\item{chipType}{The Illumina chip versions for user measurement of methylation data,
-including "27K", "450K","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".}
+\item{chipType}{Illumina array platform used for DNA methylation measurement. Available options:
+\itemize{
+\item "27K"
+\item "450K"
+\item "EPICV1"
+\item "EPICV2" (default)
+\item "MSA"
+}}
 
-\item{core}{The number of cores used during parallel computation. If set to default, it calculates
-the maximum number of available physical cores minus 1 and treats this as an operational kernel.}
+\item{core}{Number of CPU cores to use for parallel processing. If set to "default", uses the number
+of available physical cores minus one.}
 }
 \value{
 input, An R6 class object integrating all information.
