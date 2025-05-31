@@ -4,21 +4,48 @@
 <!-- badges: start -->
   <!-- badges: end -->
   
-  easyEWAS is a flexible and user-friendly R package that systematically performs EWAS analyses under various study designs, along with downstream analyses and result visualization. It can be easily integrated into various DNA methylation microarray detected by Illumina HumanMethylation Bead Chip (27K, 450K, EPICV1, EPICV2, and MSA), significantly enhancing the accessibility of EWAS analysis.
+easyEWAS is a flexible and user-friendly R package that systematically performs EWAS analyses under various study designs, along with downstream analyses and result visualization. It can be easily integrated into various DNA methylation microarray detected by Illumina HumanMethylation Bead Chip (27K, 450K, EPICV1, EPICV2, and MSA), significantly enhancing the accessibility of EWAS analysis.
 
 ## Installation
 
 You can install the development version of easyEWAS like so:
   
-  ``` r
+``` r
 devtools::install_github("ytwangZero/easyEWAS")
 ```
+
+Or you can run:
+
+``` r
+remotes::install_github("ytwangZero/easyEWAS")
+```
+
+### ⚠️ Important Note:
+
+If you are not familiar with installing R packages for bioinformatics, or if the package installation fails, the problem is often caused by missing dependencies. Some Bioconductor packages required by `easyEWAS` are not installed automatically through standard installation methods. 
+
+To avoid these issues, we strongly recommend installing easyEWAS using the installation script provided below. This script will perform the following steps:
+
+- Check your R version
+- Configure the appropriate Bioconductor version
+- Install all necessary CRAN and Bioconductor packages
+- Install the easyEWAS package from GitHub
+
+📥 Download the script from the following link:  
+🔗 [Install_easyEWAS.R](https://github.com/ytwangZero/easyEWAS_materials/blob/main/Install_easyEWAS.R)
+
+📌 Save the file to your R working directory, then run:
+
+```r
+source("Install_easyEWAS.R")
+``` 
+
 
 ## Example
 
 This is an example of performing an EWAS analysis using internal sample data and methylation data with easyEWAS.
   
-  ``` r
+``` r
 library(easyEWAS)
 getwd()
 
