@@ -64,6 +64,9 @@ startEWAS = function(input,
 ){
   tictoc::tic()
 
+  message("Starting EWAS data preprocessing ...")
+  preprocess_start_time <- Sys.time()
+
   # -------------------------------------------
   # Set number of cores for parallel processing
   # -------------------------------------------
@@ -163,6 +166,9 @@ startEWAS = function(input,
   df_beta <- input$Data$Methy[, sample_names, drop = FALSE]
   rownames(df_beta) <- input$Data$Methy[[1]]
 
+  preprocess_end_time <- Sys.time()
+  message("\n✓ EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.")
+
   # -----------------------------
   # Set up parallel computation
   # -----------------------------
@@ -190,13 +196,13 @@ startEWAS = function(input,
   if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
   if (model == "cox") clusterEvalQ(cl, library(survival))
   setup_end_time <- Sys.time()
-  message("Parallel setup completed in ", round(setup_end_time - setup_start_time, 2), " seconds.")
+  message("\n✓ Parallel setup completed in ", round(setup_end_time - setup_start_time, 2), " seconds.")
 
   # --------------------------------
   # Run parallel EWAS model fitting
   # --------------------------------
   message("\n✓ Running parallel EWAS model fitting ...")
-  start_time <- Sys.time()
+  ewas_start_time <- Sys.time()
   modelres <- foreach(i=1:no_cores, .combine='rbind', .packages=c("base", "stats")) %dopar% {
     idxs <- index_chunks[[i]]
     restemp <- matrix(0, nrow = length(idxs), ncol = result_cols)
@@ -207,11 +213,11 @@ startEWAS = function(input,
     restemp
   }
 
-  end_time <- Sys.time()
+  ewas_end_time <- Sys.time()
   stopImplicitCluster()
   stopCluster(cl)
   modelres = as.data.frame(modelres[1:len,])
-  message(sprintf("\n✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(end_time, start_time, units = "secs"))))
+  message(sprintf("\n✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
 
 
 
