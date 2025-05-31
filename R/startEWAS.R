@@ -64,8 +64,6 @@ startEWAS = function(input,
 ){
   tictoc::tic()
 
-  message("It will take some time, please be patient ...")
-
   # -------------------------------------------
   # Set number of cores for parallel processing
   # -------------------------------------------
@@ -168,6 +166,8 @@ startEWAS = function(input,
   # -----------------------------
   # Set up parallel computation
   # -----------------------------
+  message("Starting parallel computation setup ...")
+  setup_start_time <- Sys.time()
   len = nrow(df_beta)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
@@ -175,6 +175,8 @@ startEWAS = function(input,
                         "lmer" = 3 * (facnum - 1),
                         "cox" = 4)
 
+  cl <- makeCluster(no_cores)
+  registerDoParallel(cl)
 
   index_chunks <- split(1:len, ceiling((1:len)/chunk.size))
   clusterExport(cl, varlist = c("index_chunks", "ewasfun", "formula", "covdata", "facnum"), envir = environment())
@@ -187,11 +189,13 @@ startEWAS = function(input,
 
   if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
   if (model == "cox") clusterEvalQ(cl, library(survival))
+  setup_end_time <- Sys.time()
+  message("Parallel setup completed in ", round(setup_end_time - setup_start_time, 2), " seconds.")
 
   # --------------------------------
   # Run parallel EWAS model fitting
   # --------------------------------
-  message("Running parallel EWAS model fitting ...")
+  message("\n✓ Running parallel EWAS model fitting ...")
   start_time <- Sys.time()
   modelres <- foreach(i=1:no_cores, .combine='rbind', .packages=c("base", "stats")) %dopar% {
     idxs <- index_chunks[[i]]
