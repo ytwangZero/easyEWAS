@@ -95,30 +95,26 @@ startEWAS = function(input,
   # ----------------------------------------------------------
   # Define EWAS model fitting function based on selected model
   # ----------------------------------------------------------
-  # 在并行循环外部定义函数所需的所有变量
-  model_type <- model
-  facnum_val <- facnum
-
-  # 重构后的 ewasfun，不依赖闭包环境
-  ewasfun_fixed <- function(cg, ff, cov_data, model, facnum) {
-    cov_data$cpg <- as.vector(t(cg))
-    tryCatch({
+  ewasfun <- function(cg, ff, cov) {
+    cov$cpg <- as.vector(t(cg))
+    res <- tryCatch({
       if (model == "lm") {
-        out <- summary(lm(ff, data = cov_data))
+        out <- summary(lm(ff, data = cov))
         unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 4)]))
       } else if (model == "lmer") {
-        out <- summary(lmerTest::lmer(ff, data = cov_data))
+        out <- summary(lmer(ff, data = cov))
         unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 5)]))
       } else if (model == "cox") {
-        out <- summary(survival::coxph(ff, data = cov_data))
+        out <- summary(coxph(ff, data = cov))
         c(as.vector(out$conf.int[1, c(1, 3, 4)]), out$coefficients[1, 5])
       } else {
-        rep(NA_real_, ifelse(model == "cox", 4, 3 * (facnum - 1)))
+        stop("Unsupported model: ", model)
       }
     }, error = function(e) {
       if (model %in% c("lm", "lmer")) return(rep(NA_real_, 3 * (facnum - 1)))
       if (model == "cox") return(rep(NA_real_, 4))
     })
+    return(res)
   }
   model -> input$model
 
@@ -172,66 +168,35 @@ startEWAS = function(input,
   # -----------------------------
   # Set up parallel computation
   # -----------------------------
-  # --------------------------------
-  # 设置并行环境 (关键修复)
-  # --------------------------------
   message("Running parallel EWAS model fitting ...")
-  len <- nrow(df_beta)
-  chunk.size <- ceiling(len / no_cores)
+  len = nrow(df_beta)
+  chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
                         "lm" = 3 * (facnum - 1),
                         "lmer" = 3 * (facnum - 1),
                         "cox" = 4)
 
-  # 创建集群并确保关闭
-  cl <- parallel::makeCluster(no_cores)
-  on.exit({
-    try(parallel::stopCluster(cl), silent = TRUE)
-    if (foreach::getDoParRegistered()) {
-      try(doParallel::stopImplicitCluster(), silent = TRUE)
-    }
-  }, add = TRUE)
 
-  doParallel::registerDoParallel(cl)
+  cl <- makeCluster(no_cores)
+  registerDoParallel(cl)
+  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
 
-  # 显式导出必要的最小对象集
-  parallel::clusterExport(cl, varlist = c("model_type", "facnum_val"),
-                          envir = environment())
+  if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
+  if (model == "cox") clusterEvalQ(cl, library(survival))
 
-  # 在工作节点加载所需包
-  if (model_type == "lmer") {
-    parallel::clusterEvalQ(cl, {
-      library(lmerTest, quietly = TRUE)
-      library(lme4, quietly = TRUE)
-    })
-  } else if (model_type == "cox") {
-    parallel::clusterEvalQ(cl, library(survival, quietly = TRUE))
-  }
-
-  # 优化后的并行计算
+  # --------------------------------
+  # Run parallel EWAS model fitting
+  # --------------------------------
   start_time <- Sys.time()
-  modelres <- foreach::foreach(i = 1:no_cores, .combine = 'rbind') %dopar% {
-    # 计算当前分块的索引范围
-    start_idx <- (i - 1) * chunk.size + 1
-    end_idx <- min(i * chunk.size, len)
-    chunk_len <- end_idx - start_idx + 1
-
-    # 预分配结果矩阵
-    restemp <- matrix(0, nrow = chunk_len, ncol = result_cols)
-
-    # 处理当前分块
-    for (k in 1:chunk_len) {
-      row_index <- start_idx + k - 1
-      restemp[k, ] <- as.numeric(t(ewasfun_fixed(
-        df_beta[row_index, ],
-        formula,
-        covdata,
-        model_type,
-        facnum_val
-      )))
+  modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+    {
+      restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+      for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+      }
+      restemp
     }
-    restemp
-  }
+
   end_time <- Sys.time()
   stopImplicitCluster()
   stopCluster(cl)
