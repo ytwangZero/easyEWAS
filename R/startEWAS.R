@@ -169,37 +169,35 @@ startEWAS = function(input,
   # Set up parallel computation
   # -----------------------------
   message("Running parallel EWAS model fitting ...")
-  len <- nrow(df_beta)
-  chunk.size <- ceiling(len / no_cores)
+  len = nrow(df_beta)
+  chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
                         "lm" = 3 * (facnum - 1),
                         "lmer" = 3 * (facnum - 1),
                         "cox" = 4)
-  chunk_indices <- split(1:len, ceiling(seq_along(1:len) / chunk.size))
-  cl <- parallel::makeCluster(no_cores)
-  doParallel::registerDoParallel(cl)
-  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "facnum", "chunk_indices"), envir = environment())
-  df_beta_global <<- df_beta
-  clusterExport(cl, varlist = "df_beta_global", envir = environment())
+
+
+  cl <- makeCluster(no_cores)
+  registerDoParallel(cl)
+  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
+
   if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
   if (model == "cox") clusterEvalQ(cl, library(survival))
+
+  # --------------------------------
+  # Run parallel EWAS model fitting
+  # --------------------------------
   start_time <- Sys.time()
-
-  modelres <- foreach(i = 1:no_cores, .combine = 'rbind',
-                      # .export=c("ewasfun", "chunk.size", "formula", "df_beta", "covdata"),
-                      .packages = c("base", "stats")) %dopar% {
-                        idxs <- chunk_indices[[i]]
-                        restemp <- matrix(0, nrow = length(idxs), ncol = result_cols)
-
-                        for (j in seq_along(idxs)) {
-                          row_idx <- idxs[j]
-                          restemp[j, ] <- as.numeric(base::t(ewasfun(df_beta_global[row_idx, ], formula, covdata)))
-                        }
-                        restemp
-                      }
+  modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+    {
+      restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+      for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+      }
+      restemp
+    }
 
   end_time <- Sys.time()
-
   stopImplicitCluster()
   stopCluster(cl)
   modelres = as.data.frame(modelres[1:len,])
