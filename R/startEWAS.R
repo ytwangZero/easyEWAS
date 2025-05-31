@@ -176,9 +176,10 @@ startEWAS = function(input,
                         "cox" = 4)
 
 
-  cl <- makeCluster(no_cores)
-  registerDoParallel(cl)
+  index_chunks <- split(1:len, ceiling((1:len)/chunk.size))
+  clusterExport(cl, varlist = c("index_chunks", "ewasfun", "formula", "covdata", "facnum"), envir = environment())
   assign("df_beta_global", df_beta, envir = .GlobalEnv)
+  clusterExport(cl, "df_beta_global", envir = .GlobalEnv)
 
   clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "facnum"), envir = environment())
   clusterExport(cl, varlist = "df_beta_global", envir = .GlobalEnv)
@@ -192,14 +193,15 @@ startEWAS = function(input,
   # --------------------------------
   message("Running parallel EWAS model fitting ...")
   start_time <- Sys.time()
-  modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
-    {
-      restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
-      for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta_global[x,], formula, covdata)))
-      }
-      restemp
+  modelres <- foreach(i=1:no_cores, .combine='rbind', .packages=c("base", "stats")) %dopar% {
+    idxs <- index_chunks[[i]]
+    restemp <- matrix(0, nrow = length(idxs), ncol = result_cols)
+    for (j in seq_along(idxs)) {
+      x <- idxs[j]
+      restemp[j, ] <- as.numeric(base::t(ewasfun(df_beta_global[x, ], formula, covdata)))
     }
+    restemp
+  }
 
   end_time <- Sys.time()
   stopImplicitCluster()
