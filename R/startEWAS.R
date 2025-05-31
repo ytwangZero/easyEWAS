@@ -64,7 +64,7 @@ startEWAS = function(input,
 ){
   tictoc::tic()
 
-  message("It will take some time, please be patient...")
+  message("It will take some time, please be patient ...")
 
   # -------------------------------------------
   # Set number of cores for parallel processing
@@ -168,7 +168,6 @@ startEWAS = function(input,
   # -----------------------------
   # Set up parallel computation
   # -----------------------------
-  message("Running parallel EWAS model fitting ...")
   len = nrow(df_beta)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
@@ -187,6 +186,7 @@ startEWAS = function(input,
   # --------------------------------
   # Run parallel EWAS model fitting
   # --------------------------------
+  message("Running parallel EWAS model fitting ...")
   start_time <- Sys.time()
   modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
     {
