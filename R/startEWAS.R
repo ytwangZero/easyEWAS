@@ -178,7 +178,11 @@ startEWAS = function(input,
 
   cl <- makeCluster(no_cores)
   registerDoParallel(cl)
-  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
+  assign("df_beta_global", df_beta, envir = .GlobalEnv)
+
+  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "facnum"), envir = environment())
+  clusterExport(cl, varlist = "df_beta_global", envir = .GlobalEnv)
+
 
   if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
   if (model == "cox") clusterEvalQ(cl, library(survival))
@@ -192,7 +196,7 @@ startEWAS = function(input,
     {
       restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
       for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta_global[x,], formula, covdata)))
       }
       restemp
     }
