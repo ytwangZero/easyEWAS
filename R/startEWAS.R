@@ -290,7 +290,7 @@ startEWAS = function(input,
                          "MSA"    = "hg19 (GRCh37)",
                          "Unknown genome"
     )
-    message(sprintf("Using annotation for chip type: %s (Genome: %s)", chipType, chipGenome))
+    message(sprintf("Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
   }
   if(!is.null(chipType) & chipType == "EPICV2"){
     colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene","location")
