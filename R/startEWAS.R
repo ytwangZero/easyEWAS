@@ -155,8 +155,7 @@ startEWAS = function(input,
   result_cols <- switch(model,
                         "lm" = 3 * (facnum - 1),
                         "lmer" = 3 * (facnum - 1),
-                        "cox" = 4
-  ) # identify number of columns that each model returns
+                        "cox" = 4)
   
   
   cl <- makeCluster(no_cores)
@@ -167,42 +166,27 @@ startEWAS = function(input,
   if (model == "cox") clusterEvalQ(cl, library(survival))
   
   ## parallel computing-------
-  if(model %in% c("lm","lmer")){
+  system.time(
     
-    system.time(
-      modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
-        {  # local data for results
-          restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=3*(facnum-1))
-          for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-            restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
-          }
-          # return local results
-          restemp
+    modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+      {  # local data for results
+        restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+        for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+          restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
         }
-    )
-    
-    
-  }else{
-    system.time(
-      
-      modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
-        {  # local data for results
-          restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=4)
-          for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-            restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
-          }
-          # return local results
-          restemp
-        }
-    )
-    
-  }
+        # return local results
+        restemp
+      }
+  )
   
   
   stopImplicitCluster()
   stopCluster(cl)
   modelres = modelres[1:len,]
   
+  
+  
+  ## tidy result---------
   if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) == "factor"){
     
     ### categorical variable-----
