@@ -167,13 +167,12 @@ startEWAS = function(input,
   rownames(df_beta) <- input$Data$Methy[[1]]
 
   preprocess_end_time <- Sys.time()
-  message("\n✓ EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.")
+  message("✓ EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
 
   # -----------------------------
   # Set up parallel computation
   # -----------------------------
   message("Starting parallel computation setup ...")
-  setup_start_time <- Sys.time()
   len = nrow(df_beta)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
@@ -181,46 +180,40 @@ startEWAS = function(input,
                         "lmer" = 3 * (facnum - 1),
                         "cox" = 4)
 
-  cl <- makeCluster(no_cores)
-  registerDoParallel(cl)
+  setup_time <- system.time({
 
-  index_chunks <- split(1:len, ceiling((1:len)/chunk.size))
-  clusterExport(cl, varlist = c("index_chunks", "ewasfun", "formula", "covdata", "facnum"), envir = environment())
-  assign("df_beta_global", df_beta, envir = .GlobalEnv)
-  clusterExport(cl, "df_beta_global", envir = .GlobalEnv)
+    cl <- makeCluster(no_cores)
+    registerDoParallel(cl)
+    clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
 
-  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "facnum"), envir = environment())
-  clusterExport(cl, varlist = "df_beta_global", envir = .GlobalEnv)
+    if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
+    if (model == "cox") clusterEvalQ(cl, library(survival))
 
+  })["elapsed"]
 
-  if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
-  if (model == "cox") clusterEvalQ(cl, library(survival))
-  setup_end_time <- Sys.time()
-  message("\n✓ Parallel setup completed in ", round(setup_end_time - setup_start_time, 2), " seconds.")
+  message("✓ Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
 
   # --------------------------------
   # Run parallel EWAS model fitting
   # --------------------------------
-  message("\n✓ Running parallel EWAS model fitting ...")
+  message("Running parallel EWAS model fitting ...")
   ewas_start_time <- Sys.time()
-  modelres <- foreach(i=1:no_cores, .combine='rbind', .packages=c("base", "stats")) %dopar% {
-    idxs <- index_chunks[[i]]
-    restemp <- matrix(0, nrow = length(idxs), ncol = result_cols)
-    for (j in seq_along(idxs)) {
-      x <- idxs[j]
-      restemp[j, ] <- as.numeric(base::t(ewasfun(df_beta_global[x, ], formula, covdata)))
-    }
-    restemp
-  }
 
-  ewas_end_time <- Sys.time()
+  modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+    {
+      restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+      for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+      }
+      restemp
+    }
+
   stopImplicitCluster()
   stopCluster(cl)
   modelres = as.data.frame(modelres[1:len,])
-  message(sprintf("\n✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
 
-
-
+  ewas_end_time <- Sys.time()
+  message(sprintf("✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
 
   # -----------------------------
   # Post-processing results
@@ -235,7 +228,6 @@ startEWAS = function(input,
 
     ## FDR pr Bonferroni adjustment---
     if(adjustP){
-      message("Start multiple testing correction ...")
       FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
       pindex = grep("PVAL",colnames(modelres))
       FDR = matrix(0,nrow = nrow(modelres),ncol = length(FDRname))
@@ -248,6 +240,7 @@ startEWAS = function(input,
                              rep(1:(facnum - 1), 2), sep = "_")
 
       modelres = cbind(modelres,FDR)
+      message("✓ Multiple testing correction completed!\n")
 
     }
 
@@ -269,9 +262,9 @@ startEWAS = function(input,
 
     ## FDR pr Bonferroni adjustment---
     if(adjustP){
-      message("Start multiple testing correction ...\n")
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
+      message("✓ Multiple testing correction completed!\n")
 
     }
 
@@ -285,10 +278,9 @@ startEWAS = function(input,
 
     ##  FDR pr Bonferroni adjustment---
     if(adjustP){
-      message("Start multiple testing correction ...\n")
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-
+      message("✓ Multiple testing correction completed!\n")
     }
   }
 
@@ -296,7 +288,7 @@ startEWAS = function(input,
   # ---------------------------------
   # Annotate CpG sites with chip info
   # ---------------------------------
-  message("Start CpG sites annotation ...\n")
+  message("Start CpG sites annotation ...")
   if (!is.null(chipType)) {
     chipGenome <- switch(chipType,
                          "EPICV2" = "hg38 (GRCh38)",
@@ -306,7 +298,7 @@ startEWAS = function(input,
                          "MSA"    = "hg19 (GRCh37)",
                          "Unknown genome"
     )
-    message(sprintf("Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
+    message(sprintf("✓ Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
   }
   if(!is.null(chipType) & chipType == "EPICV2"){
     colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene","location")
@@ -347,7 +339,7 @@ startEWAS = function(input,
   vroom::vroom_write(modelres, output_path, delim = ",")
 
   lubridate::now() -> NowTime
-  message(paste0("EWAS analysis has been completed! \nYou can find results in ",input$outpath, ".\n", NowTime))
+  message(paste0("✓ EWAS analysis has been completed! \nYou can find results in ",input$outpath, ".\n", NowTime))
 
   tictoc::toc()
 
