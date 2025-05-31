@@ -7,37 +7,41 @@
 #'
 #' @param input An R6 class integrated with all the information obtained from the loadEWAS or
 #' transEWAS function.
-#' @param filename User-customized .csv file name for storing EWAS results. If
-#' "default" is chosen, it will be named as "ewasresult".
-#' @param model The statistical models used for EWAS analysis include "lm" (general linear
-#' regression), "lmer" (linear mixed-effects model), and "cox" (Cox proportional hazards model).
-#' The default model is "lm".
+#' @param filename filename Name of the output CSV file to store EWAS results. If set to "default", 
+#' the file will be named "ewasresult.csv" and saved in the specified output directory.
+#' @param model Statistical model to use for EWAS analysis. Options include:
+#'   - "lm": Linear regression (default)
+#'   - "lmer": Linear mixed-effects model
+#'   - "cox": Cox proportional hazards model
 #' @param expo Name of the exposure variable used in the EWAS analysis.
-#' @param cov Name(s) of covariate(s) used in the EWAS analysis, with each  name separated by
-#' a comma. Ensure there are no space. e.g. "cov1,cov2,cov3".
-#' @param random Random intercept item name, used only when selecting the "lmer" model.
-#' @param time When the user selects the Cox proportional risk model, the name
-#' of the time variable needs to be specified.
-#' @param status When the user selects the Cox proportional risk model, the name
-#' of the status variable needs to be specified.
-#' @param adjustP Whether to calculate adjusted p-values(FDR and Bonferroni correction). The default
-#' is set to TRUE.
-#' @param chipType The Illumina chip versions for user measurement of methylation data,
-#' including "27K", "450K","EPICV1", "EPICV2", and "MSA". The default is "EPICV2".
-#' @param core The number of cores used during parallel computation. If set to default, it calculates
-#' the maximum number of available physical cores minus 1 and treats this as an operational kernel.
+#' @param cov Comma-separated list of covariate variable names to include in the model (e.g., 
+#' "age,sex,bmi"). Do not include spaces between names. Optional.
+#' @param random Name of the grouping variable for the random intercept, required only when using 
+#' the "lmer" model.
+#' @param time Name of the time-to-event variable, required only when using the "cox" model.
+#' @param status Name of the event/censoring indicator variable, required only when using the "cox" model.
+#' @param adjustP Logical. If TRUE (default), adjusts p-values using both FDR (Benjamini-Hochberg) and 
+#' Bonferroni correction methods.
+#' @param chipType Illumina array platform used for DNA methylation measurement. Available options:
+#'   - "27K"
+#'   - "450K"
+#'   - "EPICV1"
+#'   - "EPICV2" (default)
+#'   - "MSA"
+#' @param core Number of CPU cores to use for parallel processing. If set to "default", uses the number 
+#' of available physical cores minus one.
 #' @return input, An R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import parallel
-#' @import foreach
-#' @import doParallel
-#' @importFrom vroom vroom_write
-#' @import stringr
-#' @importFrom survival coxph
-#' @import tictoc
-#' @importFrom lmerTest lmer
+#' @importFrom magrittr %>%
+#' @importFrom tictoc tic toc
 #' @importFrom lubridate now
+#' @import parallel detectCores makeCluster stopCluster
+#' @import foreach foreach %dopar%
+#' @import doParallel registerDoParallel stopImplicitCluster
+#' @importFrom vroom vroom_write
+#' @importFrom survival coxph
+#' @importFrom lmerTest lmer
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
@@ -46,141 +50,125 @@
 #' expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
 #' }
 startEWAS = function(input,
-                    filename ="default",
-                    model = "lm",
-                    expo = NULL,
-                    cov = NULL,
-                    random = NULL,
-                    time = NULL,
-                    status = NULL,
-                    adjustP = TRUE,
-                    chipType = "EPICV2",
-                    core = "default"
+                     filename ="default",
+                     model = "lm",
+                     expo = NULL,
+                     cov = NULL,
+                     random = NULL,
+                     time = NULL,
+                     status = NULL,
+                     adjustP = TRUE,
+                     chipType = "EPICV2",
+                     core = "default"
 ){
   tictoc::tic()
-
+  
   message("It will take some time, please be patient...")
-
+  
   # select number of cores
   if(core == "default"){
     no_cores = detectCores(logical=F) - 1
   }else{
     no_cores = core
   }
-
-  if(exists("expo")){
-    if(!is.null(expo)){
-      if(expo == "default"){
-        expo = "var"
-      }
-    }
-  }
-
-  # peform EWAS analysis
+  
+  expo <- if (is.null(expo) || expo == "default") "var" else expo
+  
+  # peform EWAS analysis--------------------------------------------------------
   ## calculate factor number
-  if(class(unlist(input$Data$Expo[,expo])) == "factor"){
-    facnum = length(levels(unlist(input$Data$Expo[,expo])))
-  }else{
-    facnum = 2
+  expo_vec <- unlist(input$Data$Expo[, expo])
+  facnum <- if (is.factor(expo_vec)) length(levels(expo_vec)) else 2
+  if (!is.factor(expo_vec) && model %in% c("lm", "lmer") && length(unique(expo_vec)) <= 4) {
+    warning(paste0("Exposure variable '", expo, "' is not a factor but has only ",
+                   length(unique(expo_vec)), " unique values. ",
+                   "If this is a categorical variable, please use transEWAS() to convert it."))
   }
-
+  
+  
   ## define ewas function-----
-  ewasfun <- switch (model,
-                     "lm" = function(cg,ff,cov){
-                       cov$cpg = as.vector(t(cg))
-                       out <- base::summary(lm(ff, data = cov))
-                       temp = c()
-                       for (i in 2:facnum) {
-                         temp = append(temp,as.vector(out$coefficients[i,c(1,2,4)]))
-                       }
-                       return(temp)
-                     },
-                     "lmer" = function(cg,ff,cov){
-                       cov$cpg = as.vector(t(cg))
-                       out <- base::summary(lmer(ff, data = cov))
-                       temp = c()
-                       for (i in 2:facnum) {
-                         temp = append(temp,as.vector(out$coefficients[i,c(1,2,5)]))
-                       }
-                       return(temp)
-                     },
-                     "cox" = function(cg,ff,cov){
-                       cov$cpg = as.vector(t(cg))
-                       out <- base::summary(coxph(ff, data = cov))
-                       return(c(as.vector(out$conf.int[1,c(1,3,4)]),
-                                out$coefficients[1,5]))
-                     }
-  )
+  ewasfun <- function(cg, ff, cov) {
+    cov$cpg <- as.vector(t(cg))
+    res <- tryCatch({
+      if (model == "lm") {
+        out <- summary(lm(ff, data = cov))
+        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 4)]))
+      } else if (model == "lmer") {
+        out <- summary(lmer(ff, data = cov))
+        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 5)]))
+      } else if (model == "cox") {
+        out <- summary(coxph(ff, data = cov))
+        c(as.vector(out$conf.int[1, c(1, 3, 4)]), out$coefficients[1, 5])
+      } else {
+        stop("Unsupported model: ", model)
+      }
+    }, error = function(e) {
+      if (model %in% c("lm", "lmer")) return(rep(NA_real_, 3 * (facnum - 1)))
+      if (model == "cox") return(rep(NA_real_, 4))
+    })
+    return(res)
+  }
   model -> input$model
-
+  
   ## set ewas parameter
-  if(!is.null(cov)){
-    VarCov = unlist(strsplit(cov,","))
-    covdata = switch(model,
-                     "lm" = input$Data$Expo[,c(expo,VarCov)],
-                     "lmer" = input$Data$Expo[,c(expo,VarCov,random)],
-                     "cox" = input$Data$Expo[,c(time,status,VarCov)],
-
-    )
-  }else{
-    covdata = switch(model,
-                     "lm" = input$Data$Expo[expo],
-                     "lmer" = input$Data$Expo[c(expo,random)],
-                     "cox" = input$Data$Expo[c(time,status)],
-
-    )
+  VarCov <- if (!is.null(cov)) unlist(strsplit(cov, ",")) else character(0)
+  required_cols <- switch(model,
+                          "lm"   = c(expo, VarCov),
+                          "lmer" = c(expo, VarCov, random),
+                          "cox"  = c(time, status, VarCov)
+  )
+  covdata <- input$Data$Expo[, required_cols, drop = FALSE]
+  
+  
+  if (model == "lmer") {
+    colnames(covdata)[match(random, colnames(covdata))] <- "random"
+    input$random <- random
+  } else if (model == "cox") {
+    colnames(covdata)[match(time, colnames(covdata))] <- "time"
+    colnames(covdata)[match(status, colnames(covdata))] <- "status"
+    input$time <- time
+    input$status <- status
   }
-
-
-  if(model == "lmer"){
-    random_index = which(colnames(covdata) == random)
-    colnames(covdata)[random_index] = "random"
-    input$random = random
-
-  }else if(model == "cox"){
-    time_index = which(colnames(covdata) == time)
-    colnames(covdata)[time_index] = "time"
-    status_index = which(colnames(covdata) == status)
-    colnames(covdata)[status_index] = "status"
-
-  }
-  covdata -> input$covdata
-
+  input$covdata <- covdata
+  
+  
   formula <- switch (model,
                      "lm" = as.formula(paste0("cpg ~ ",paste(colnames(covdata), collapse = " + "))),
-                     "lmer" = as.formula(paste0("cpg ~ ",paste(colnames(covdata)[-random_index],
-                                                                collapse = " + "), " + (1 | random)")),
+                     "lmer" = as.formula(paste0("cpg ~ ",paste(colnames(covdata)[-random_index], collapse = " + "), " + (1 | random)")),
                      "cox" = {
-                      if(exists("VarCov")){
-                        as.formula(paste0("Surv(time, status) ~ cpg + ", paste(VarCov, collapse = "+")))
-                      }else{
-                        as.formula("Surv(time, status) ~ cpg")
-                      }
+                       if(length(VarCov) > 0){
+                         as.formula(paste0("Surv(time, status) ~ cpg + ", paste(VarCov, collapse = "+")))
+                       }else{
+                         as.formula("Surv(time, status) ~ cpg")
+                       }
                      }
   )
   formula -> input$formula
-
-  input$Data$Methy %>%
-    as.data.frame() %>%
-    dplyr::select(input$Data$Expo[[1]]) -> df_beta
-  rownames(df_beta) = input$Data$Methy[[1]]
-  ## set cores number----
-  cl <- makeCluster(no_cores)
-  registerDoParallel(cl, cores=no_cores)
-  if(model == "lmer"){
-    clusterEvalQ(cl, library(lmerTest))
-  }
-  if(model == "cox"){
-    clusterEvalQ(cl, library(survival))
-  }
-
-
-  ## parallel computing-------
+  
+  sample_names <- input$Data$Expo[[1]]
+  df_beta <- input$Data$Methy[, sample_names, drop = FALSE]
+  rownames(df_beta) <- input$Data$Methy[[1]]
+  
+  ## set parallel parameters----
   message("Start the EWAS analysis...")
   len = nrow(df_beta)
   chunk.size <- ceiling(len/no_cores)
+  result_cols <- switch(model,
+                        "lm" = 3 * (facnum - 1),
+                        "lmer" = 3 * (facnum - 1),
+                        "cox" = 4
+  ) # identify number of columns that each model returns
+  
+  
+  cl <- makeCluster(no_cores)
+  registerDoParallel(cl)
+  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
+  
+  if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
+  if (model == "cox") clusterEvalQ(cl, library(survival))
+  
+  ## parallel computing-------
   if(model %in% c("lm","lmer")){
-
+    
     system.time(
       modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
         {  # local data for results
@@ -192,11 +180,11 @@ startEWAS = function(input,
           restemp
         }
     )
-
-
+    
+    
   }else{
     system.time(
-
+      
       modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
         {  # local data for results
           restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=4)
@@ -207,23 +195,23 @@ startEWAS = function(input,
           restemp
         }
     )
-
+    
   }
-
-
+  
+  
   stopImplicitCluster()
   stopCluster(cl)
   modelres = modelres[1:len,]
-
+  
   if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) == "factor"){
-
+    
     ### categorical variable-----
     modelres %>%
       as.data.frame() %>%
       purrr::set_names(paste(rep(c("BETA","SE","PVAL"),facnum-1),rep(1:(facnum-1),each = 3), sep = "_")) %>%
       mutate(probe = rownames(df_beta)) %>%
       dplyr::select(probe, everything()) -> modelres
-
+    
     #### FDR---
     if(adjustP){
       FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
@@ -237,18 +225,18 @@ startEWAS = function(input,
       FDR <- FDR %>%
         purrr::set_names(paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_"))
       modelres = cbind(modelres,FDR)
-
+      
     }
-
-
+    
+    
   }else if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) != "factor"){
-
+    
     ### continuous variable-----
     modelres %>%
       as.data.frame() %>%
       purrr::set_names("BETA","SE","PVAL") %>%
       mutate(probe = rownames(df_beta))-> modelres
-
+    
     #### per SD & IQR---
     modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
     modelres$BETA_perIQR = (modelres$BETA)*(IQR(covdata[[expo]],na.rm = TRUE))
@@ -256,32 +244,32 @@ startEWAS = function(input,
     modelres$SE_perIQR = (modelres$SE)*(IQR(covdata[[expo]],na.rm = TRUE))
     modelres %>%
       dplyr::select(probe,BETA,BETA_perSD,BETA_perIQR,SE,SE_perSD,SE_perIQR,PVAL) -> modelres
-
+    
     #### FDR---
     if(adjustP){
       message("Start multiple testing correction ...\n")
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-
+      
     }
-
-
+    
+    
   }else if(model == "cox"){
-
+    
     modelres %>%
       as.data.frame() %>%
       purrr::set_names("HR","LOWER_95%","UPPER_95%","PVAL") %>%
       mutate(probe = rownames(df_beta)) %>%
       dplyr::select(probe, everything())-> modelres
-
+    
     #### FDR---
     if(adjustP){
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-
+      
     }
   }
-
+  
   message("Start CpG sites annotation ...\n")
   #### set annotation file----
   if(!is.null(chipType) & chipType == "EPICV2"){
@@ -309,8 +297,8 @@ startEWAS = function(input,
     modelres %>%
       left_join(annotationMSA, by = "probe") -> modelres
   }
-
-
+  
+  
   # save model result-----
   modelres -> input$result
   if(filename == "default"){
@@ -318,12 +306,12 @@ startEWAS = function(input,
   }else{
     vroom::vroom_write(modelres, paste0(input$outpath, "/",filename, ".csv"), ",")
   }
-
+  
   lubridate::now() -> NowTime
   message(paste0("EWAS analysis has been completed! \nYou can find results in ",input$outpath, ".\n", NowTime))
-
+  
   tictoc::toc()
-
+  
   return(input)
-
+  
 }
