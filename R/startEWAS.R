@@ -219,7 +219,7 @@ startEWAS = function(input,
 
     ## FDR pr Bonferroni adjustment---
     if(adjustP){
-      message("Start multiple testing correction ...\n")
+      message("Start multiple testing correction ...")
       FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
       pindex = grep("PVAL",colnames(modelres))
       FDR = matrix(0,nrow = nrow(modelres),ncol = length(FDRname))
