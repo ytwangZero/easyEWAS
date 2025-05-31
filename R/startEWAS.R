@@ -186,7 +186,7 @@ startEWAS = function(input,
   start_time <- Sys.time()
 
   modelres <- foreach(i = 1:no_cores, .combine = 'rbind',
-                      .export=c("ewasfun", "chunk.size", "formula", "df_beta", "covdata"),
+                      # .export=c("ewasfun", "chunk.size", "formula", "df_beta", "covdata"),
                       .packages = c("base", "stats")) %dopar% {
                         idxs <- chunk_indices[[i]]
                         restemp <- matrix(0, nrow = length(idxs), ncol = result_cols)
@@ -201,7 +201,7 @@ startEWAS = function(input,
   end_time <- Sys.time()
 
   stopImplicitCluster()
-  pstopCluster(cl)
+  stopCluster(cl)
   modelres = as.data.frame(modelres[1:len,])
   message(sprintf("\n✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(end_time, start_time, units = "secs"))))
 
