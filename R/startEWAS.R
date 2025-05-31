@@ -65,13 +65,6 @@ startEWAS = function(input,
   
   message("It will take some time, please be patient...")
   
-  # select number of cores
-  if(core == "default"){
-    no_cores = detectCores(logical=F) - 1
-  }else{
-    no_cores = core
-  }
-  
   expo <- if (is.null(expo) || expo == "default") "var" else expo
   
   # peform EWAS analysis--------------------------------------------------------
@@ -150,39 +143,29 @@ startEWAS = function(input,
   
   ## set parallel parameters----
   message("Start the EWAS analysis...")
-  len = nrow(df_beta)
-  chunk.size <- ceiling(len/no_cores)
-  result_cols <- switch(model,
-                        "lm" = 3 * (facnum - 1),
-                        "lmer" = 3 * (facnum - 1),
-                        "cox" = 4)
+  if (core == "default") {
+    no_cores <- parallel::detectCores(logical = FALSE) - 1
+  } else {
+    no_cores <- core
+  }
+  future::plan(multisession, workers = no_cores)
+  
+  process_one <- function(idx) {
+    tryCatch({
+      cg <- df_beta[idx, , drop = FALSE]
+      result <- ewasfun(cg, formula, covdata)
+      as.numeric(result)
+    }, error = function(e) {
+      rep(NA_real_, result_cols)
+    })
+  }
   
   
-  cl <- makeCluster(no_cores)
-  registerDoParallel(cl)
-  clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
-  
-  if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
-  if (model == "cox") clusterEvalQ(cl, library(survival))
-  
-  ## parallel computing-------
   system.time(
-    
-    modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
-      {  # local data for results
-        restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
-        for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-          restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
-        }
-        # return local results
-        restemp
-      }
+    modelres_list <- furrr::future_map(1:nrow(df_beta), process_one, .options = furrr::furrr_options(seed = TRUE))
   )
-  
-  
-  stopImplicitCluster()
-  stopCluster(cl)
-  modelres = modelres[1:len,]
+  modelres <- do.call(rbind, modelres_list)
+  rownames(modelres) <- rownames(df_beta)
   
   
   
