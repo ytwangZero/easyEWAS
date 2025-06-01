@@ -191,6 +191,7 @@ startEWAS = function(input,
     assign("covdata", covdata, envir = .GlobalEnv)
     assign("facnum", facnum, envir = .GlobalEnv)
     assign("formula", formula, envir = .GlobalEnv)
+    assign("ewasfun", ewasfun, envir = .GlobalEnv)
 
     clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = .GlobalEnv)
 
@@ -218,6 +219,7 @@ startEWAS = function(input,
 
   stopImplicitCluster()
   stopCluster(cl)
+  rm(df_beta, covdata, facnum, formula, ewasfun, envir = .GlobalEnv)
   modelres = as.data.frame(modelres[1:len,])
 
   ewas_end_time <- Sys.time()
