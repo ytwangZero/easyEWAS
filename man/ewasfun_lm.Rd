@@ -2,10 +2,29 @@
 % Please edit documentation in R/ewasfun_utils.R
 \name{ewasfun_lm}
 \alias{ewasfun_lm}
+\alias{ewasfun_lmer}
+\alias{ewasfun_cox}
 \title{EWAS Model Computation Utilities}
 \usage{
 ewasfun_lm(cg, ff, cov, facnum)
+
+ewasfun_lmer(cg, ff, cov, facnum)
+
+ewasfun_cox(cg, ff, cov)
+}
+\arguments{
+\item{cg}{A row vector representing one CpG site's beta values across samples.}
+
+\item{ff}{A model formula object (e.g., cpg ~ var1 + var2).}
+
+\item{cov}{A data.frame containing the covariates for the model.}
+
+\item{facnum}{(Only for lm/lmer) Number of factor levels for exposure variable.}
+}
+\value{
+A numeric vector with model coefficients, standard errors, and p-values.
 }
 \description{
-Functions to perform EWAS model fitting for lm, lmer, and cox
+Model fitting functions for EWAS analysis using linear, mixed, or Cox models.
+These are designed to be used inside parallel loops with minimal memory footprint.
 }

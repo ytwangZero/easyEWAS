@@ -170,17 +170,17 @@ startEWAS = function(input,
     assign("covdata", covdata, envir = .GlobalEnv)
     assign("facnum", facnum, envir = .GlobalEnv)
     assign("formula", formula, envir = .GlobalEnv)
-    assign("ewasfun", ewasfun, envir = .GlobalEnv)
+    # assign("ewasfun", ewasfun, envir = .GlobalEnv)
 
     if (model == "lm") {
-      ewasfun <- ewasfun_lm
+      # ewasfun <- ewasfun_lm
       clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
     } else if (model == "lmer") {
-      ewasfun <- ewasfun_lmer
+      # ewasfun <- ewasfun_lmer
       clusterEvalQ(cl, library(lmerTest))
       clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
     } else if (model == "cox") {
-      ewasfun <- ewasfun_cox
+      # ewasfun <- ewasfun_cox
       clusterEvalQ(cl, library(survival))
       clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
     }
@@ -200,14 +200,24 @@ startEWAS = function(input,
     {
       restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
       for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-        restemp[x - (i-1)*chunk.size,] <- as.numeric(base::t(ewasfun(df_beta[x,],formula,covdata)))
+        restemp[x - (i-1)*chunk.size,] <- as.numeric(
+
+          t(if (model == "lm") {
+            ewasfun_lm(df_beta[x, ], formula, covdata, facnum)
+          } else if (model == "lmer") {
+            ewasfun_lmer(df_beta[x, ], formula, covdata, facnum)
+          } else if (model == "cox") {
+            ewasfun_cox(df_beta[x, ], formula, covdata)
+          })
+
+        )
       }
       restemp
     }
 
   stopImplicitCluster()
   stopCluster(cl)
-  rm(df_beta, covdata, facnum, formula, ewasfun, envir = .GlobalEnv)
+  rm(df_beta, covdata, facnum, formula, envir = .GlobalEnv)
   modelres = as.data.frame(modelres[1:len,])
 
   ewas_end_time <- Sys.time()
