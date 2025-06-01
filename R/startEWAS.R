@@ -147,7 +147,7 @@ startEWAS = function(input,
   rownames(df_beta) <- input$Data$Methy[[1]]
 
   preprocess_end_time <- Sys.time()
-  message("✓ EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
+  message("EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
 
   # -----------------------------
   # Set up parallel computation
@@ -184,7 +184,7 @@ startEWAS = function(input,
 
   })["elapsed"]
 
-  message("✓ Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
+  message("Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
 
   # --------------------------------
   # Run parallel EWAS model fitting
@@ -217,7 +217,7 @@ startEWAS = function(input,
   modelres = as.data.frame(modelres[1:len,])
 
   ewas_end_time <- Sys.time()
-  message(sprintf("✓ Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
+  message(sprintf("Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
 
   # -----------------------------
   # Post-processing results
@@ -244,7 +244,7 @@ startEWAS = function(input,
                              rep(1:(facnum - 1), 2), sep = "_")
 
       modelres = cbind(modelres,FDR)
-      message("✓ Multiple testing correction completed!\n")
+      message("Multiple testing correction completed!\n")
 
     }
 
@@ -268,7 +268,7 @@ startEWAS = function(input,
     if(adjustP){
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-      message("✓ Multiple testing correction completed!\n")
+      message("Multiple testing correction completed!\n")
 
     }
 
@@ -284,7 +284,7 @@ startEWAS = function(input,
     if(adjustP){
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
       modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-      message("✓ Multiple testing correction completed!\n")
+      message("Multiple testing correction completed!\n")
     }
   }
 
@@ -329,7 +329,7 @@ startEWAS = function(input,
                          "MSA"    = "hg19 (GRCh37)",
                          "Unknown genome"
     )
-    message(sprintf("✓ Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
+    message(sprintf("Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
   }
 
 
@@ -345,7 +345,7 @@ startEWAS = function(input,
   vroom::vroom_write(modelres, output_path, delim = ",")
 
   lubridate::now() -> NowTime
-  message(paste0("✓ EWAS analysis has been completed! You can find results in ",input$outpath, ".\n", NowTime))
+  message(paste0("EWAS analysis has been completed! You can find results in ",input$outpath, ".\n", NowTime))
 
   tictoc::toc()
 
