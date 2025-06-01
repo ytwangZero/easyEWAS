@@ -117,6 +117,9 @@ startEWAS = function(input,
     })
     return(res)
   }
+
+  pryr::object_size(environment(ewasfun))
+
   model -> input$model
 
   # -----------------------------
