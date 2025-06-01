@@ -185,7 +185,14 @@ startEWAS = function(input,
 
     cl <- makeCluster(no_cores)
     registerDoParallel(cl)
-    clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = environment())
+
+
+    assign("df_beta", df_beta, envir = .GlobalEnv)
+    assign("covdata", covdata, envir = .GlobalEnv)
+    assign("facnum", facnum, envir = .GlobalEnv)
+    assign("formula", formula, envir = .GlobalEnv)
+
+    clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = .GlobalEnv)
 
     if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
     if (model == "cox") clusterEvalQ(cl, library(survival))
