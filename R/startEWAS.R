@@ -170,17 +170,13 @@ startEWAS = function(input,
     assign("covdata", covdata, envir = .GlobalEnv)
     assign("facnum", facnum, envir = .GlobalEnv)
     assign("formula", formula, envir = .GlobalEnv)
-    # assign("ewasfun", ewasfun, envir = .GlobalEnv)
 
     if (model == "lm") {
-      # ewasfun <- ewasfun_lm
       clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
     } else if (model == "lmer") {
-      # ewasfun <- ewasfun_lmer
       clusterEvalQ(cl, library(lmerTest))
       clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
     } else if (model == "cox") {
-      # ewasfun <- ewasfun_cox
       clusterEvalQ(cl, library(survival))
       clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
     }
