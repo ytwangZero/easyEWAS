@@ -193,7 +193,7 @@ startEWAS = function(input,
     assign("formula", formula, envir = .GlobalEnv)
     assign("ewasfun", ewasfun, envir = .GlobalEnv)
 
-    clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = .GlobalEnv)
+    # clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = .GlobalEnv)
 
     if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
     if (model == "cox") clusterEvalQ(cl, library(survival))
