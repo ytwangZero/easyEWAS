@@ -96,27 +96,6 @@ startEWAS = function(input,
   # ----------------------------------------------------------
   # Define EWAS model fitting function based on selected model
   # ----------------------------------------------------------
-  ewasfun <- function(cg, ff, cov) {
-    cov$cpg <- as.vector(t(cg))
-    res <- tryCatch({
-      if (model == "lm") {
-        out <- summary(lm(ff, data = cov))
-        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 4)]))
-      } else if (model == "lmer") {
-        out <- summary(lmer(ff, data = cov))
-        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 5)]))
-      } else if (model == "cox") {
-        out <- summary(coxph(ff, data = cov))
-        c(as.vector(out$conf.int[1, c(1, 3, 4)]), out$coefficients[1, 5])
-      } else {
-        stop("Unsupported model: ", model)
-      }
-    }, error = function(e) {
-      if (model %in% c("lm", "lmer")) return(rep(NA_real_, 3 * (facnum - 1)))
-      if (model == "cox") return(rep(NA_real_, 4))
-    })
-    return(res)
-  }
 
   model -> input$model
 
@@ -193,10 +172,19 @@ startEWAS = function(input,
     assign("formula", formula, envir = .GlobalEnv)
     assign("ewasfun", ewasfun, envir = .GlobalEnv)
 
-    # clusterExport(cl, varlist = c("ewasfun", "formula", "covdata", "df_beta", "facnum"), envir = .GlobalEnv)
+    if (model == "lm") {
+      ewasfun <- ewasfun_lm
+      clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
+    } else if (model == "lmer") {
+      ewasfun <- ewasfun_lmer
+      clusterEvalQ(cl, library(lmerTest))
+      clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
+    } else if (model == "cox") {
+      ewasfun <- ewasfun_cox
+      clusterEvalQ(cl, library(survival))
+      clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
+    }
 
-    if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
-    if (model == "cox") clusterEvalQ(cl, library(survival))
 
   })["elapsed"]
 
