@@ -22,13 +22,11 @@
 #' @return input, An R6 class object integrating all information.
 #' @export
 #' @import dplyr
-#' @import tictoc
+#' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
-#' @import boot
-#' @import boot.pval
-#' @import survival
+#' @importFrom boot boot
+#' @importFrom survival coxph
 #' @importFrom lmerTest lmer
-#' @importFrom lubridate now
 #'
 #'
 #' @examples \dontrun{
@@ -47,71 +45,43 @@ bootEWAS = function(input,
                     filename = "default"){
 
   tictoc::tic()
-  # message("It will take some time, please be patient...")
-  #### method 1: p value filter--------
-
-  if(is.null(CpGs)){
-    base::subset(input$result, input$result[filterP] < cutoff, select = probe) -> cpgname
-
-    # colnames(input$Data$Methy)[1]
-    input$Data$Methy %>%
-      filter(input$Data$Methy[[1]] %in% cpgname$probe) %>%
-      as.data.frame() %>%
-      dplyr::select(colnames(input$Data$Methy)[1], input$Data$Expo[[1]]) -> df_beta
-    rownames(df_beta) = df_beta[[1]]
-    df_beta[1] = NULL
-    tdf_beta = t(df_beta)
-
-    df = cbind(input$covdata, tdf_beta)
-    input$cpgnames <- cpgname$probe
-
+  message("Starting bootstrap-based internal validation...")
+  if (!bootCI %in% c("norm", "perc", "basic", "stud", "bca")) {
+    stop("Invalid 'bootCI' value. Must be one of 'norm', 'perc', 'basic', 'stud', 'bca'.")
   }
 
-  #### method 2: cpg name filter-------
-  if(!is.null(CpGs)){
 
-    cpgname = unlist(strsplit(CpGs,","))
-    if(!all(cpgname %in% input$result$probe)){
-      lubridate::now() -> NowTime
-      message("Error: Not all CpG names are in the EWAS results! Please enter the correct names. \n",
-              NowTime, "\n")
-
-      tictoc::toc()
-
-      return(input)
-      stop("")
-    }else{
-      colnames(input$Data$Methy)[1] = "probe"
-      input$Data$Methy %>%
-        filter(probe %in% cpgname) %>%
-        as.data.frame() %>%
-        dplyr::select(colnames(input$Data$Methy)[1], input$Data$Expo[[1]]) -> df_beta
-      rownames(df_beta) = df_beta[[1]]
-      df_beta[1] = NULL
-      tdf_beta = t(df_beta)
-
-      df = cbind(input$covdata, tdf_beta)
-      input$cpgnames = cpgname
+  if (is.null(CpGs)) {
+    sig_probes <- input$result$probe[input$result[[filterP]] < cutoff]
+    message(length(sig_probes), " CpG sites selected by ", filterP, " < ", cutoff)
+  } else {
+    sig_probes <- unlist(strsplit(CpGs, ","))
+    missing_probes <- setdiff(sig_probes, input$result$probe)
+    if (length(missing_probes) > 0) {
+      stop("Error: The following CpG names are not found in EWAS results:\n",
+           paste(missing_probes, collapse = ", "), "\nTime: ", lubridate::now())
     }
-
+    message(length(sig_probes), " CpG sites specified by user.")
   }
+
+  probe_col <- colnames(input$Data$Methy)[1]
+  sample_ids <- input$Data$Expo[[1]]
+
+  df_beta <- input$Data$Methy[input$Data$Methy[[probe_col]] %in% sig_probes, c(probe_col, sample_ids)]
+  rownames(df_beta) <- df_beta[[probe_col]]
+  df_beta[[probe_col]] <- NULL
+  tdf_beta <- t(df_beta)
+  df <- cbind(input$covdata, tdf_beta)
 
   #### peform bootstrap analysis---------------------
   input$result %>%
-    filter(probe %in% input$cpgnames) %>%
+    filter(probe %in% sig_probes) %>%
     dplyr::select(2) -> original
 
 
   set.seed(123)
-  if(length(input$cpgnames) == 0){
-    lubridate::now()  -> NowTime
-    message("Error: No CpG sites meeting the filtering criteria were found! \n",
-            NowTime, "\n")
-
-    tictoc::toc()
-
-    return(input)
-    stop("")
+  if (length(sig_probes) == 0) {
+    stop("No CpG sites meet the filtering criteria.\nTime: ", lubridate::now())
   }else{
     if(input$model == "lm"){
       coef_function <- function(data, formula, indices) {
@@ -141,7 +111,7 @@ bootEWAS = function(input,
       lower_CI <- c()
       upper_CI <- c()
       pval <- c()
-      for(cpg in input$cpgnames){
+      for(cpg in sig_probes){
         message("Bootstrap analysis for ", cpg, "...")
         if(input$model %in% c("lm","lmer")){
           formula=as.formula(paste0(cpg, "~", as.character(input$formula)[3]))
@@ -156,48 +126,35 @@ bootEWAS = function(input,
         # ddpcr::quiet(boot.pval(boot.res, type = "perc") -> temp_P)
 
 
-        if(bootCI == "norm"){
-          lower_temp = temp_CI$normal[2]
-          upper_temp = temp_CI$normal[3]
+        ci_vals <- switch(bootCI,
+                          "norm"  = temp_CI$normal[2:3],
+                          "perc"  = temp_CI$percent[4:5],
+                          "basic" = temp_CI$basic[4:5],
+                          "stud"  = temp_CI$student[4:5],
+                          "bca"   = temp_CI$bca[4:5]
+        )
 
-        }else if(bootCI == "perc"){
-          lower_temp = temp_CI$percent[4]
-          upper_temp = temp_CI$percent[5]
-
-        }else if(bootCI == "basic"){
-          lower_temp = temp_CI$basic[4]
-          upper_temp = temp_CI$basic[5]
-
-        }else if(bootCI == "stud"){
-          lower_temp = temp_CI$student[4]
-          upper_temp = temp_CI$student[5]
-
-        }else if(bootCI == "bca"){
-          lower_temp = temp_CI$bca[4]
-          upper_temp = temp_CI$bca[5]
-
-        }
+        lower_temp <- ci_vals[1]
+        upper_temp <- ci_vals[2]
 
         lower_CI = c(lower_CI, lower_temp)
         upper_CI = c(upper_CI, upper_temp)
-        # pval = c(pval, temp_P)
       }
 
 
 
       input$bootres <- tibble(
-        probe = input$cpgnames,
+        probe = sig_probes,
         original = original[[1]],
         lower_CI = lower_CI,
-        upper_CI = upper_CI,
-
+        upper_CI = upper_CI
       )
 
 
       if(filename == "default"){
         vroom::vroom_write(input$bootres, paste0(input$outpath, "/bootresult.csv"), ",")
       }else{
-        vroom::vroom_write(input$bootres, paste0(input$outpath, "/",filename, ".csv"), ",")
+        vroom::vroom_write(input$bootres, file.path(input$outpath, paste0(filename, ".csv")), ",")
       }
 
       lubridate::now()  -> NowTime

@@ -41,7 +41,7 @@
 #' @importFrom ddpcr quiet
 #' @importFrom vroom vroom_write
 #' @import stringr
-#' @import tictoc
+#' @importFrom tictoc tic toc
 #' @import DMRcate
 #' @importFrom lubridate now
 #' @examples \dontrun{
@@ -70,12 +70,33 @@ dmrEWAS = function(input,
   options('download.file.method.GEOquery'='auto')
   options('GEOquery.inmemory.gpl'=FALSE)
 
+  if (!chipType %in% c("EPICV2", "EPICV1", "450K")) {
+    stop("Invalid 'chipType'. Must be one of: 'EPICV2', 'EPICV1', or '450K'.")
+  }
+  if (!genome %in% c("hg19", "hg38")) {
+    stop("Invalid 'genome'. Must be 'hg19' or 'hg38'.")
+  }
+  valid_filters <- c("mean", "sensitivity", "precision", "random")
+  if (!epicv2Filter %in% valid_filters) {
+    stop("Invalid 'epicv2Filter'. Must be one of: ", paste(valid_filters, collapse = ", "))
+  }
+  if (is.null(expo) || !expo %in% colnames(input$Data$Expo)) {
+    stop("Exposure variable is missing or not found in input$Data$Expo.")
+  }
+
+  if (!is.null(cov)) {
+    cov_list <- strsplit(cov, ",")[[1]]
+    missing_covs <- setdiff(cov_list, colnames(input$Data$Expo))
+    if (length(missing_covs) > 0) {
+      stop("Covariates not found in input$Data$Expo: ", paste(missing_covs, collapse = ", "))
+    }
+  }
+
+
   tictoc::tic()
-  arraytype = case_when(
-    chipType == "EPICV2" ~ "EPICv2",
-    chipType == "EPICV1" ~ "EPICv1",
-    chipType == "450K" ~ "450K"
-  )
+  array_map <- c("EPICV2" = "EPICv2", "EPICV1" = "EPICv1", "450K" = "450K")
+  arraytype <- array_map[[chipType]]
+
 
   # Filter out position replicates from an EPICv2 beta- or M-matrix ---
   input$Data$Methy %>%
