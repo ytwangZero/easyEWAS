@@ -119,6 +119,11 @@ startEWAS = function(input,
     random_index <- which(colnames(covdata) == "random")
     input$random <- random
   } else if (model == "cox") {
+
+    if (is.factor(input$Data$Expo[[status]])) {
+      stop("status variable must be numeric (e.g., 0/1), not a factor. Please convert it before using Cox model.")
+    }
+
     colnames(covdata)[match(time, colnames(covdata))] <- "time"
     colnames(covdata)[match(status, colnames(covdata))] <- "status"
     input$time <- time
