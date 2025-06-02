@@ -35,7 +35,7 @@
 #' @param lab.cex a number, controls the size of labels of X/Y-axis and the labels of chromosomes for circle plot.
 #' @param lab.font a number, controls the font of labels of all axis.
 #' @param plot.type a character or vector, only "d", "c", "m", "q" can be used. if plot.type="d",
-#' SNP density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
+#' CpG density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
 #' plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
 #' if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.
 #' @param r a number, the radius for the circle (the inside radius), the default is 1.
@@ -85,13 +85,32 @@
 #' @param main.font font of title.
 #' @param box logical, this function draws a box around the current plot.
 #' @param verbose whether to print the log information.
+#' @param bin.size a integer, the size of bin in bp for marker density plot.
+#' @param bin.breaks a vector, set the breaks for the legend of density plot, e.g., seq(min, max, step),
+#' the windows in which the number of markers is out of the this range will be plotted in the same colors
+#' with the min or max value.
+#' @param ylim vector (c(min, max)), CMplot will only plot the points among this interval.
+#' @param outward logical, if TRUE, all points will be plotted from inside to outside for circular Manhattan plot.
+#' @param mar the size of white gaps around the plot, 4 values should be provided, indicating the direction
+#' of bottom, left, up, and right.
+#' @param chr.den.col a character or vector or NULL, the colour for the CpG density. If the length of parameter
+#' 'chr.den.col' is bigger than 1, CpG density that counts the number of CpG within given size ('bin.size')
+#' will be plotted around the circle. If chr.den.col=NULL, the density bar will not be attached on the bottom
+#' of manhattan plot.
+#' @param chr.pos.max logical, whether the physical positions of each chromosome contain the maximum length
+#' of the chromosome.
+#' @param cir.chr logical, a boundary that represents chromosomes will be plotted on the periphery of a circle,
+#' the default is TRUE.
+#' @param cir.chr.h a number, the width for the boundary, if cir.chr=FALSE, then this parameter will be useless.
+#' @param file.output a logical, users can choose whether to output the plot results.
 #'
-#' @return input, An R6 class object integrating all information.
+#' @return The updated input object, including CMplot-ready data stored in input$CMplot.
 #' @export
 #' @import dplyr
-#' @import CMplot
-#' @import tictoc
+#' @importFrom CMplot CMplot
+#' @importFrom tictoc tic toc
 #' @importFrom lubridate now
+#' @importFrom withr with_dir
 #'
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
@@ -106,26 +125,93 @@ plotEWAS <- function(input,
                      file=c("jpg","pdf","tiff","png"),
                      col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f",
                            "#e66519","#d581b7","#83d3ad","#7c162c","#26755d"),
-                     bin.size=1e6,bin.breaks=NULL,LOG10=TRUE,pch=19,type="p",band=1,
-                     H=1.5,ylim=NULL,axis.cex=1,axis.lwd=1.5,lab.cex=1.5,lab.font=2,
-                     plot.type=c("m","c","q","d"),multracks=FALSE,
-                     multracks.xaxis=FALSE,multraits=FALSE,points.alpha=100L,r=0.3,
-                     cex=c(0.5,1,1),outward=FALSE,ylab=expression(-log[10](italic(p))),
-                     ylab.pos=3,xticks.pos=1,mar=c(3,6,3,3),mar.between=0,
-                     threshold.col="red",threshold.lwd=1,threshold.lty=2,amplify=FALSE,
-                     signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2,
-                     highlight=NULL,highlight.cex=1,highlight.pch=19,highlight.type="p",
-                     highlight.col="red",highlight.text=NULL,highlight.text.col="black",
-                     highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,
-                     chr.border=FALSE,chr.labels.angle=0,chr.den.col="black",
-                     chr.pos.max=FALSE,cir.band=1,cir.chr=TRUE,cir.chr.h=1.5,
-                     cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,conf.int=TRUE,
-                     conf.int.col=NULL,file.output=TRUE,file.name="",
-                     dpi=300,height=NULL,width=NULL,main="",main.cex=1.5,
-                     main.font=2,legend.ncol=NULL,legend.cex=1,
-                     legend.pos=c("left","middle","right"),box=FALSE,verbose=FALSE){
+                     bin.size=1e6,
+                     bin.breaks=NULL,
+                     LOG10=TRUE,
+                     pch=19,
+                     type="p",
+                     band=1,
+                     H=1.5,
+                     ylim=NULL,
+                     axis.cex=1,
+                     axis.lwd=1.5,
+                     lab.cex=1.5,
+                     lab.font=2,
+                     plot.type=c("m","c","q","d"),
+                     multracks=FALSE,
+                     multracks.xaxis=FALSE,
+                     multraits=FALSE,
+                     points.alpha=100L,
+                     r=0.3,
+                     cex=c(0.5,1,1),
+                     outward=FALSE,
+                     ylab=expression(-log[10](italic(p))),
+                     ylab.pos=3,
+                     xticks.pos=1,
+                     mar=c(3,6,3,3),
+                     mar.between=0,
+                     threshold.col="red",
+                     threshold.lwd=1,
+                     threshold.lty=2,
+                     amplify=FALSE,
+                     signal.cex=1.5,
+                     signal.pch=19,
+                     signal.col=NULL,
+                     signal.line=2,
+                     highlight=NULL,
+                     highlight.cex=1,
+                     highlight.pch=19,
+                     highlight.type="p",
+                     highlight.col="red",
+                     highlight.text=NULL,
+                     highlight.text.col="black",
+                     highlight.text.cex=1,
+                     highlight.text.font=3,
+                     chr.labels=NULL,
+                     chr.border=FALSE,
+                     chr.labels.angle=0,
+                     chr.den.col="black",
+                     chr.pos.max=FALSE,
+                     cir.band=1,
+                     cir.chr=TRUE,
+                     cir.chr.h=1.5,
+                     cir.axis=TRUE,
+                     cir.axis.col="black",
+                     cir.axis.grid=TRUE,
+                     conf.int=TRUE,
+                     conf.int.col=NULL,
+                     file.output=TRUE,
+                     file.name="",
+                     dpi=300,
+                     height=NULL,
+                     width=NULL,
+                     main="",
+                     main.cex=1.5,
+                     main.font=2,
+                     legend.ncol=NULL,
+                     legend.cex=1,
+                     legend.pos=c("left","middle","right"),
+                     box=FALSE,
+                     verbose=FALSE){
 
   tictoc::tic()
+  if (is.null(input$result)) {
+    stop("No EWAS result found in 'input'. Please run startEWAS() first.")
+  }
+  if (!p %in% colnames(input$result)) {
+    stop(sprintf("The p-value column '%s' does not exist in input$result. Please check the input or specify a correct column name.", p))
+  }
+  if (file.name == "") {
+    message("No file name provided. Output images will use default names from CMplot.")
+  }
+  if (is.null(threshold)) {
+    threshold <- 0.05
+    message("No significance threshold provided. Default threshold (0.05) will be used.")
+  }
+
+
+
+
   input$result %>%
     dplyr::select("probe","chr","pos", all_of(p)) %>%
     arrange(chr) -> df
@@ -135,28 +221,28 @@ plotEWAS <- function(input,
   df[order(sx),] -> input$CMplot
 
   #plot the ewas result----------
-  path = getwd()
-  setwd(input$outpath)
-  CMplot::CMplot(input$CMplot,col=col,
-                 bin.size=bin.size,bin.breaks=bin.breaks,LOG10=LOG10,pch=pch,type=type,band=band,
-                 H=H,ylim=ylim,axis.cex=axis.cex,axis.lwd=axis.lwd,lab.cex=lab.cex,lab.font=lab.font,
-                 plot.type=plot.type,multracks=multracks,
-                 multracks.xaxis=multracks.xaxis,multraits=multraits,points.alpha=points.alpha,r=r,
-                 cex=cex,outward=outward,ylab=ylab,
-                 ylab.pos=ylab.pos,xticks.pos=xticks.pos,mar=mar,mar.between=mar.between,threshold=threshold,
-                 threshold.col=threshold.col,threshold.lwd=threshold.lwd,threshold.lty=threshold.lty,amplify=amplify,
-                 signal.cex=signal.cex,signal.pch=signal.pch,signal.col=signal.col,signal.line=signal.line,
-                 highlight=highlight,highlight.cex=highlight.cex,highlight.pch=highlight.pch,highlight.type=highlight.type,
-                 highlight.col=highlight.col,highlight.text=highlight.text,highlight.text.col=highlight.text.col,
-                 highlight.text.cex=highlight.text.cex,highlight.text.font=highlight.text.font,chr.labels=chr.labels,
-                 chr.border=chr.border,chr.labels.angle=chr.labels.angle,chr.den.col=chr.den.col,
-                 chr.pos.max=chr.pos.max,cir.band=cir.band,cir.chr=cir.chr,cir.chr.h=cir.chr.h,
-                 cir.axis=cir.axis,cir.axis.col=cir.axis.col,cir.axis.grid=cir.axis.grid,conf.int=conf.int,
-                 conf.int.col=conf.int.col,file.output=file.output,file.name=file.name,file=file,dpi=dpi,
-                 height=height,width=width,main=main,main.cex=main.cex,
-                 main.font=main.font,legend.ncol=legend.ncol,legend.cex=legend.cex,
-                 legend.pos=legend.pos,box=box,verbose=verbose)
-  setwd(path)
+  withr::with_dir(input$outpath, {
+    CMplot::CMplot(input$CMplot,
+                   col=col,
+                   bin.size=bin.size, bin.breaks=bin.breaks, LOG10=LOG10, pch=pch, type=type, band=band,
+                   H=H, ylim=ylim, axis.cex=axis.cex, axis.lwd=axis.lwd, lab.cex=lab.cex, lab.font=lab.font,
+                   plot.type=plot.type, multracks=multracks,
+                   multracks.xaxis=multracks.xaxis, multraits=multraits, points.alpha=points.alpha, r=r,
+                   cex=cex, outward=outward, ylab=ylab,
+                   ylab.pos=ylab.pos, xticks.pos=xticks.pos, mar=mar, mar.between=mar.between, threshold=threshold,
+                   threshold.col=threshold.col, threshold.lwd=threshold.lwd, threshold.lty=threshold.lty, amplify=amplify,
+                   signal.cex=signal.cex, signal.pch=signal.pch, signal.col=signal.col, signal.line=signal.line,
+                   highlight=highlight, highlight.cex=highlight.cex, highlight.pch=highlight.pch, highlight.type=highlight.type,
+                   highlight.col=highlight.col, highlight.text=highlight.text, highlight.text.col=highlight.text.col,
+                   highlight.text.cex=highlight.text.cex, highlight.text.font=highlight.text.font, chr.labels=chr.labels,
+                   chr.border=chr.border, chr.labels.angle=chr.labels.angle, chr.den.col=chr.den.col,
+                   chr.pos.max=chr.pos.max, cir.band=cir.band, cir.chr=cir.chr, cir.chr.h=cir.chr.h,
+                   cir.axis=cir.axis, cir.axis.col=cir.axis.col, cir.axis.grid=cir.axis.grid, conf.int=conf.int,
+                   conf.int.col=conf.int.col, file.output=file.output, file.name=file.name, file=file, dpi=dpi,
+                   height=height, width=width, main=main, main.cex=main.cex,
+                   main.font=main.font, legend.ncol=legend.ncol, legend.cex=legend.cex,
+                   legend.pos=legend.pos, box=box, verbose=verbose)
+  })
 
 
   lubridate::now() -> NowTime

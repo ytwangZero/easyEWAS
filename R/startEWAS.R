@@ -42,7 +42,7 @@
 #' @importFrom vroom vroom_write
 #' @importFrom survival coxph
 #' @importFrom lmerTest lmer
-#' @importFrom progress progress_bar
+#' @importFrom stats lm
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
@@ -165,12 +165,6 @@ startEWAS = function(input,
     cl <- makeCluster(no_cores)
     registerDoParallel(cl)
 
-
-    # assign("df_beta", df_beta, envir = .GlobalEnv)
-    # assign("covdata", covdata, envir = .GlobalEnv)
-    # assign("facnum", facnum, envir = .GlobalEnv)
-    # assign("formula", formula, envir = .GlobalEnv)
-
     if (model == "lm") {
       clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
     } else if (model == "lmer") {
@@ -192,7 +186,7 @@ startEWAS = function(input,
   message("Running parallel EWAS model fitting ...")
   ewas_start_time <- Sys.time()
 
-  modelres <- foreach(i=1:no_cores, .combine='rbind') %dopar%
+  modelres <- foreach(i=1:no_cores, .combine='rbind', .errorhandling = "pass") %dopar%
     {
       restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
       for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
@@ -212,7 +206,6 @@ startEWAS = function(input,
 
   stopImplicitCluster()
   stopCluster(cl)
-  # rm(df_beta, covdata, facnum, formula, envir = .GlobalEnv)
   modelres = as.data.frame(modelres[1:len,])
 
   ewas_end_time <- Sys.time()
