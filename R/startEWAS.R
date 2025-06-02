@@ -166,10 +166,10 @@ startEWAS = function(input,
     registerDoParallel(cl)
 
 
-    assign("df_beta", df_beta, envir = .GlobalEnv)
-    assign("covdata", covdata, envir = .GlobalEnv)
-    assign("facnum", facnum, envir = .GlobalEnv)
-    assign("formula", formula, envir = .GlobalEnv)
+    # assign("df_beta", df_beta, envir = .GlobalEnv)
+    # assign("covdata", covdata, envir = .GlobalEnv)
+    # assign("facnum", facnum, envir = .GlobalEnv)
+    # assign("formula", formula, envir = .GlobalEnv)
 
     if (model == "lm") {
       clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
@@ -205,7 +205,6 @@ startEWAS = function(input,
           } else if (model == "cox") {
             ewasfun_cox(df_beta[x, ], formula, covdata)
           })
-
         )
       }
       restemp
@@ -213,7 +212,7 @@ startEWAS = function(input,
 
   stopImplicitCluster()
   stopCluster(cl)
-  rm(df_beta, covdata, facnum, formula, envir = .GlobalEnv)
+  # rm(df_beta, covdata, facnum, formula, envir = .GlobalEnv)
   modelres = as.data.frame(modelres[1:len,])
 
   ewas_end_time <- Sys.time()
