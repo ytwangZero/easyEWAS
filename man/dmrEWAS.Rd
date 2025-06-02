@@ -27,7 +27,15 @@ the lowest variation instead, "random" takes a single probe at random from each 
 \item{cov}{Name(s) of covariate(s) used in the DMR analysis, with each  name separated by
 a comma. Ensure there are no space. e.g. "cov1,cov2,cov3".}
 
-\item{genome}{Reference genome for annotating DMRs. Can be one of "hg19" or "hg38".}
+\item{genome}{Reference genome for annotating DMRs.
+Must be consistent with the array platform used:
+\itemize{
+\item Use \code{"hg38"} for EPICV2 arrays.
+\item Use \code{"hg19"} for 450K and EPICV1 arrays.
+}
+
+Note: the \code{genome} argument does not currently affect the internal behavior of \code{extractRanges()}
+(i.e., no liftover is performed).}
 
 \item{fdrCPG}{Used to individually assess the significance of each CpG site. If the FDR-adjusted
 p-value of a CpG site is below the specified fdrCPG threshold, the site will be marked as significant.

@@ -26,16 +26,27 @@ The default is 0.05.}
 \item{ont}{When choosing GO enrichment analysis, select the GO sub-ontology for which the enrichment analysis
 will be performed. One of "BP", "MF", and "CC" sub-ontologies, or "ALL" for all three. Default to "BP".}
 
-\item{pool}{If ont='ALL', whether pool 3 GO sub-ontologies.}
+\item{pool}{If ont='ALL', whether pool three GO sub-ontologies.}
 
 \item{plot}{Whether the results of enrichment analysis need to be visualized, the default is TRUE}
 
 \item{plotType}{Whether to draw a bar plot ("bar") or a dot plot ("dot"), the default is "dot".}
 
 \item{plotcolor}{It is the vertical axis of the picture of the enrichment analysis results. Users can choose
-"pvalue" or "p.adjust" or "qvalue". The default is "pvalue".}
+"pvalue" or "p.adjust" or "qvalue". The default is "p.adjust".}
 
-\item{showCategory}{The number of categories which will be displayed in the plots.}
+\item{x}{Character string specifying the variable to be used on the x-axis of the plot.
+Common options are "GeneRatio" or "Count".
+\itemize{
+\item "GeneRatio": ratio of input genes annotated to a given term.
+\item "Count": the number of input genes annotated to the term.
+}}
+
+\item{showCategory}{The number of categories which will be displayed in the plots. Default to 10.}
+
+\item{width}{Width of the PDF output in inches. Default is 11.}
+
+\item{height}{Height of the PDF output in inches. Default is 7.}
 
 \item{pvalueCutoff}{The p-value threshold used to filter enrichment results. Only results that pass
 the p-value test (i.e., those smaller than this value) will be reported. This value refers to the
