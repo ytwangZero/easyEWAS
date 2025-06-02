@@ -42,6 +42,7 @@
 #' @export
 #' @import dplyr
 #' @importFrom tictoc tic toc
+#' @importFrom enrichplot dotplot
 #' @importFrom clusterProfiler bitr enrichGO enrichKEGG
 #' @import org.Hs.eg.db
 #' @importFrom vroom vroom_write

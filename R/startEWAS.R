@@ -36,7 +36,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @importFrom parallel detectCores makeCluster stopCluster clusterExport
+#' @importFrom parallel detectCores makeCluster stopCluster clusterExport clusterEvalQ
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel stopImplicitCluster
 #' @importFrom vroom vroom_write
@@ -79,17 +79,20 @@ startEWAS = function(input,
   # -----------------------------
   # Set exposure variable name
   # -----------------------------
-  expo <- if (is.null(expo) || expo == "default") "var" else expo
+  if(model %in% c("lm","lmer")){
 
-  # ----------------------------------------------------------
-  # Check if exposure is a factor and compute number of levels
-  # ----------------------------------------------------------
-  expo_vec <- unlist(input$Data$Expo[, expo])
-  facnum <- if (is.factor(expo_vec)) length(levels(expo_vec)) else 2
-  if (!is.factor(expo_vec) && model %in% c("lm", "lmer") && length(unique(expo_vec)) <= 4) {
-    warning(paste0("Exposure variable '", expo, "' is not a factor but has only ",
-                   length(unique(expo_vec)), " unique values. ",
-                   "If this is a categorical variable, please use transEWAS() to convert it."))
+    expo <- if (is.null(expo) || expo == "default") "var" else expo
+
+    # ----------------------------------------------------------
+    # Check if exposure is a factor and compute number of levels
+    # ----------------------------------------------------------
+    expo_vec <- unlist(input$Data$Expo[, expo])
+    facnum <- if (is.factor(expo_vec)) length(levels(expo_vec)) else 2
+    if (!is.factor(expo_vec) && model %in% c("lm", "lmer") && length(unique(expo_vec)) <= 4) {
+      warning(paste0("Exposure variable '", expo, "' is not a factor but has only ",
+                     length(unique(expo_vec)), " unique values. ",
+                     "If this is a categorical variable, please use transEWAS() to convert it."))
+    }
   }
 
 
@@ -214,56 +217,57 @@ startEWAS = function(input,
   # -----------------------------
   # Post-processing results
   # -----------------------------
-  if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) == "factor"){
+  if(model %in% c("lmer","lm")){
 
     ## categorical variable-----
-    colnames(modelres)[1:(3 * (facnum - 1))] <- paste0(
-      rep(c("BETA", "SE", "PVAL"), facnum - 1), "_", rep(1:(facnum - 1), each = 3)
-    )
-    modelres <- cbind(probe = rownames(df_beta), modelres)
+    if(is.factor(input$Data$Expo[[expo]])){
 
-    ## FDR pr Bonferroni adjustment---
-    if(adjustP){
-      FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
-      pindex = grep("PVAL",colnames(modelres))
-      FDR = matrix(0,nrow = nrow(modelres),ncol = length(FDRname))
-      for(i in pindex){
-        FDR[,(i-1)/3] = p.adjust(modelres[[i]],method = "BH")
-        FDR[,((i-1)/3)+(facnum-1)] = p.adjust(modelres[[i]],method = "bonferroni")
+      colnames(modelres)[1:(3 * (facnum - 1))] <- paste0(
+        rep(c("BETA", "SE", "PVAL"), facnum - 1), "_", rep(1:(facnum - 1), each = 3)
+      )
+      modelres <- cbind(probe = rownames(df_beta), modelres)
+
+      ## FDR pr Bonferroni adjustment---
+      if(adjustP){
+        FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
+        pindex = grep("PVAL",colnames(modelres))
+        FDR = matrix(0,nrow = nrow(modelres),ncol = length(FDRname))
+        for(i in pindex){
+          FDR[,(i-1)/3] = p.adjust(modelres[[i]],method = "BH")
+          FDR[,((i-1)/3)+(facnum-1)] = p.adjust(modelres[[i]],method = "bonferroni")
+        }
+        FDR <- as.data.frame(FDR)
+        colnames(FDR) <- paste(rep(c("FDR", "Bonfferoni"), each = (facnum - 1)),
+                               rep(1:(facnum - 1), 2), sep = "_")
+
+        modelres = cbind(modelres,FDR)
+        message("Multiple testing correction completed!\n")
+
       }
-      FDR <- as.data.frame(FDR)
-      colnames(FDR) <- paste(rep(c("FDR", "Bonfferoni"), each = (facnum - 1)),
-                             rep(1:(facnum - 1), 2), sep = "_")
 
-      modelres = cbind(modelres,FDR)
-      message("Multiple testing correction completed!\n")
+      ## continuous variable-----
+    }else if(!is.factor(input$Data$Expo[[expo]])){
 
-    }
+      names(modelres)[1:3] <- c("BETA", "SE", "PVAL")
+      modelres <- cbind(probe = rownames(df_beta), modelres)
 
-
-  }else if((model %in% c("lmer","lm")) & class(unlist(input$Data$Expo[,expo])) != "factor"){
-
-    ## continuous variable-----
-    names(modelres)[1:3] <- c("BETA", "SE", "PVAL")
-    modelres <- cbind(probe = rownames(df_beta), modelres)
-
-    ## per SD & IQR---
-    modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
-    modelres$BETA_perIQR = (modelres$BETA)*(IQR(covdata[[expo]],na.rm = TRUE))
-    modelres$SE_perSD = (modelres$SE)*(sd(covdata[[expo]],na.rm = TRUE))
-    modelres$SE_perIQR = (modelres$SE)*(IQR(covdata[[expo]],na.rm = TRUE))
-    modelres <- modelres[, c("probe", "BETA", "BETA_perSD", "BETA_perIQR",
-                             "SE", "SE_perSD", "SE_perIQR", "PVAL")]
+      ## per SD & IQR---
+      modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
+      modelres$BETA_perIQR = (modelres$BETA)*(IQR(covdata[[expo]],na.rm = TRUE))
+      modelres$SE_perSD = (modelres$SE)*(sd(covdata[[expo]],na.rm = TRUE))
+      modelres$SE_perIQR = (modelres$SE)*(IQR(covdata[[expo]],na.rm = TRUE))
+      modelres <- modelres[, c("probe", "BETA", "BETA_perSD", "BETA_perIQR",
+                               "SE", "SE_perSD", "SE_perIQR", "PVAL")]
 
 
-    ## FDR pr Bonferroni adjustment---
-    if(adjustP){
-      modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
-      modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
-      message("Multiple testing correction completed!\n")
+      ## FDR pr Bonferroni adjustment---
+      if(adjustP){
+        modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
+        modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
+        message("Multiple testing correction completed!\n")
+      }
 
     }
-
 
   }else if(model == "cox"){
 

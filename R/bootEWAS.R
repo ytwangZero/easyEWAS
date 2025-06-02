@@ -24,7 +24,7 @@
 #' @import dplyr
 #' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
-#' @importFrom boot boot
+#' @importFrom boot boot boot.ci
 #' @importFrom survival coxph
 #' @importFrom lmerTest lmer
 #'
