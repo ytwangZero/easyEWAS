@@ -4,17 +4,80 @@
 \alias{plotEWAS}
 \title{Visualize the results of EWAS analysis}
 \usage{
-plotEWAS(input, p = "PVAL", threshold=NULL, file=c("jpg","pdf","tiff","png"),
-col=c("#4197d8","#f8c120","#413496","#495226","#d60b6f","#e66519","#d581b7","#83d3ad",
-"#7c162c","#26755d"),LOG10=TRUE,pch=19,type="p",band=1,axis.cex=1,axis.lwd=1.5,
-lab.cex=1.5,lab.font=2,plot.type=c("m","c","q","d"),r=0.3,cex=c(0.5,1,1),ylab="",
-ylab.pos=3,xticks.pos=1,threshold.col="red", threshold.lwd=1,threshold.lty=2,
-amplify=FALSE,signal.cex=1.5,signal.pch=19,signal.col=NULL,signal.line=2, highlight=NULL,
-highlight.cex=1,highlight.pch=19,highlight.type="p",highlight.col="red",highlight.text=NULL,
-highlight.text.col="black",highlight.text.cex=1,highlight.text.font=3,chr.labels=NULL,
-chr.border=FALSE,chr.labels.angle=0,cir.axis=TRUE,cir.axis.col="black",cir.axis.grid=TRUE,
-conf.int=TRUE,conf.int.col=NULL, file.name="",dpi=300,height=NULL,width=NULL,main="",
-main.cex=1.5,main.font=2,box=FALSE,verbose=FALSE)
+plotEWAS(input,
+         p = "PVAL",
+         threshold = NULL,
+         file = c("jpg", "pdf", "tiff", "png"),
+         col = c("#4197d8", "#f8c120", "#413496", "#495226", "#d60b6f",
+                 "#e66519", "#d581b7", "#83d3ad", "#7c162c", "#26755d"),
+         bin.size = 1e6,
+         bin.breaks = NULL,
+         LOG10 = TRUE,
+         pch = 19,
+         type = "p",
+         band = 1,
+         H = 1.5,
+         ylim = NULL,
+         axis.cex = 1,
+         axis.lwd = 1.5,
+         lab.cex = 1.5,
+         lab.font = 2,
+         plot.type = c("m", "c", "q", "d"),
+         multracks = FALSE,
+         multracks.xaxis = FALSE,
+         multraits = FALSE,
+         points.alpha = 100L,
+         r = 0.3,
+         cex = c(0.5, 1, 1),
+         outward = FALSE,
+         ylab = expression(-log[10](italic(p))),
+         ylab.pos = 3,
+         xticks.pos = 1,
+         mar = c(3, 6, 3, 3),
+         mar.between = 0,
+         threshold.col = "red",
+         threshold.lwd = 1,
+         threshold.lty = 2,
+         amplify = FALSE,
+         signal.cex = 1.5,
+         signal.pch = 19,
+         signal.col = NULL,
+         signal.line = 2,
+         highlight = NULL,
+         highlight.cex = 1,
+         highlight.pch = 19,
+         highlight.type = "p",
+         highlight.col = "red",
+         highlight.text = NULL,
+         highlight.text.col = "black",
+         highlight.text.cex = 1,
+         highlight.text.font = 3,
+         chr.labels = NULL,
+         chr.border = FALSE,
+         chr.labels.angle = 0,
+         chr.den.col = "black",
+         chr.pos.max = FALSE,
+         cir.band = 1,
+         cir.chr = TRUE,
+         cir.chr.h = 1.5,
+         cir.axis = TRUE,
+         cir.axis.col = "black",
+         cir.axis.grid = TRUE,
+         conf.int = TRUE,
+         conf.int.col = NULL,
+         file.output = TRUE,
+         file.name = "",
+         dpi = 300,
+         height = NULL,
+         width = NULL,
+         main = "",
+         main.cex = 1.5,
+         main.font = 2,
+         legend.ncol = NULL,
+         legend.cex = 1,
+         legend.pos = c("left", "middle", "right"),
+         box = FALSE,
+         verbose = FALSE)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS function.}
@@ -30,6 +93,12 @@ not be added.}
 \item{col}{A vector specifies the colors for the chromosomes. If the length of col is shorter than
 the number of chromosomes, the colors will be applied cyclically.}
 
+\item{bin.size}{a integer, the size of bin in bp for marker density plot.}
+
+\item{bin.breaks}{a vector, set the breaks for the legend of density plot, e.g., seq(min, max, step),
+the windows in which the number of markers is out of the this range will be plotted in the same colors
+with the min or max value.}
+
 \item{LOG10}{logical, whether to change the p-value into log10(p-value) scale.}
 
 \item{pch}{a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.}
@@ -38,6 +107,8 @@ the number of chromosomes, the colors will be applied cyclically.}
 is the same with "type" in \code{\link[plot]{plot}}.}
 
 \item{band}{a number, the size of space between chromosomes, the default is 1.}
+
+\item{ylim}{vector (c(min, max)), CMplot will only plot the points among this interval.}
 
 \item{axis.cex}{a number, controls the size of ticks labels of X/Y-axis and the ticks labels of axis
 for circle plot.}
@@ -49,7 +120,7 @@ for circle plot.}
 \item{lab.font}{a number, controls the font of labels of all axis.}
 
 \item{plot.type}{a character or vector, only "d", "c", "m", "q" can be used. if plot.type="d",
-SNP density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
+CpG density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
 plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
 if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.}
 
@@ -60,11 +131,16 @@ it is a vector, the first number controls the size of points in circle plot(the 
 second number controls the size of points in Manhattan plot (the default is 1), the third number controls
 the size of points in Q-Q plot (the default is 1)}
 
+\item{outward}{logical, if TRUE, all points will be plotted from inside to outside for circular Manhattan plot.}
+
 \item{ylab}{a character, the labels for y axis.}
 
 \item{ylab.pos}{the distance between ylab and yaxis.}
 
 \item{xticks.pos}{the distance between labels of x ticks and x axis.}
+
+\item{mar}{the size of white gaps around the plot, 4 values should be provided, indicating the direction
+of bottom, left, up, and right.}
 
 \item{threshold.col}{a character or vector, the color for the line of threshold levels, it can also
 control the color of the diagonal line of QQplot.}
@@ -111,6 +187,19 @@ if signal.col=NULL, then the colors of significant points will not be changed.}
 
 \item{chr.labels.angle}{a value, rotate tick labels of x-axis for Manhattan plot (-90 < chr.labels.angle < 90).}
 
+\item{chr.den.col}{a character or vector or NULL, the colour for the CpG density. If the length of parameter
+'chr.den.col' is bigger than 1, CpG density that counts the number of CpG within given size ('bin.size')
+will be plotted around the circle. If chr.den.col=NULL, the density bar will not be attached on the bottom
+of manhattan plot.}
+
+\item{chr.pos.max}{logical, whether the physical positions of each chromosome contain the maximum length
+of the chromosome.}
+
+\item{cir.chr}{logical, a boundary that represents chromosomes will be plotted on the periphery of a circle,
+the default is TRUE.}
+
+\item{cir.chr.h}{a number, the width for the boundary, if cir.chr=FALSE, then this parameter will be useless.}
+
 \item{cir.axis}{a logical, whether to add the axis of circle Manhattan plot.}
 
 \item{cir.axis.col}{a character, the color of the axis for circle.}
@@ -120,6 +209,8 @@ if signal.col=NULL, then the colors of significant points will not be changed.}
 \item{conf.int}{logical, whether to plot confidence interval on QQ-plot.}
 
 \item{conf.int.col}{character or vector, the color of confidence interval of QQplot.}
+
+\item{file.output}{a logical, users can choose whether to output the plot results.}
 
 \item{file.name}{a character or vector, the names of output files.}
 
@@ -140,7 +231,7 @@ if signal.col=NULL, then the colors of significant points will not be changed.}
 \item{verbose}{whether to print the log information.}
 }
 \value{
-input, An R6 class object integrating all information.
+The updated input object, including CMplot-ready data stored in input$CMplot.
 }
 \description{
 Visualize EWAS results based on the \code{\link[CMplot]{CMplot}} package, including Manhattan
