@@ -102,22 +102,25 @@ dmrEWAS = function(input,
   array_map <- c("EPICV2" = "EPICv2", "EPICV1" = "EPICv1", "450K" = "450K")
   arraytype <- array_map[[chipType]]
 
-
   # Filter out position replicates from an EPICv2 beta- or M-matrix ---
   input$Data$Methy %>%
     as.data.frame() %>%
     dplyr::select(input$Data$Expo[[1]]) %>%
     as.matrix() -> dfcpg
   rownames(dfcpg) = input$Data$Methy[[1]]
-  if(arraytype == "EPICv2"){
-    message("Filtering out position replicates from an EPICv2 beta- or M-matrix. Please be patient...")
-  }
 
   formula <- reformulate(termlabels = c(expo, cov_list))
   design <- model.matrix(formula, data = input$Data$Expo)
 
   # DMR analysis ---
   message("Starting the differentially methylated region analysis. Please be patient...")
+  if (arraytype == "EPICv2") {
+    if (is.null(epicv2Filter) || epicv2Filter == "") {
+      stop("Error: 'epicv2Filter' must be specified when chipType is 'EPICV2'.")
+    }
+    message("EPICv2 detected. Filtering position replicates using method: '", epicv2Filter, "'...")
+  }
+
   ddpcr::quiet(myannotation <- cpg.annotate("array", dfcpg, arraytype = arraytype, what = what,
                                analysis.type="differential",
                                design=design, coef=2, fdr = fdrCPG,
@@ -137,8 +140,9 @@ dmrEWAS = function(input,
 
 
   lubridate::now()  -> NowTime
-  message(paste0("Differentially Methylated Region analysis has been completed!\nYou can find results in ",input$outpath, ".\n", NowTime))
-
+  message("DMR result has been saved to: ", file.path(input$outpath, outfile))
+  message("DMR analysis completed successfully.")
+  message("Timestamp: ", NowTime)
   tictoc::toc()
 
   return(input)

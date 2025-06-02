@@ -71,7 +71,9 @@ loadEWAS <- function(input,
       )
 
       lubridate::now() -> NowTime
-      message("Complete loading All files! \n", NowTime, "\n")
+      message("All data files have been successfully loaded.\n",
+              "Timestamp: ", NowTime, "\n")
+
 
       tictoc::toc()
 
@@ -79,7 +81,8 @@ loadEWAS <- function(input,
 
     }else{
       lubridate::now() -> NowTime
-      stop("Error: No such file or directory! Please enter the correct path. \n", NowTime, "\n")
+      stop("No such file or directory! Please enter the correct path. \n",
+           "Timestamp: ", NowTime, "\n")
 
       tictoc::toc()
 
@@ -100,14 +103,16 @@ loadEWAS <- function(input,
         # rm("methydata")
 
         lubridate::now() -> NowTime
-        message("Sample data and methylation data for example have been loaded! \n", NowTime, "\n")
+        message("Example sample data and methylation data have been successfully loaded.\n",
+                "Timestamp: ", NowTime, "\n")
         tictoc::toc()
 
         return(input)
 
       }else{
         lubridate::now() -> NowTime
-        stop("Error: Unrecognized characters were entered at ExpoData or MethyData! \n", NowTime, "\n")
+        stop("Invalid value detected in 'ExpoData' or 'MethyData'. Please check your input. \n",
+             "Timestamp: ", NowTime, "\n")
         tictoc::toc()
 
         return(input)
@@ -121,7 +126,9 @@ loadEWAS <- function(input,
       MethyData -> input$Data$Methy
 
       lubridate::now() -> NowTime
-      message("Complete loading All files! \n", NowTime, "\n")
+      message("All data files have been successfully loaded.\n",
+              "Timestamp: ", NowTime, "\n")
+
       tictoc::toc()
 
       return(input)

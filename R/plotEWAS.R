@@ -284,6 +284,8 @@ plotEWAS <- function(input,
                                 "19","20","21","22","X","Y"), ordered = T)
   df[order(sx),] -> input$CMplot
 
+  message("Starting EWAS result visualization using CMplot...")
+
   #plot the ewas result----------
   withr::with_dir(input$outpath, {
     CMplot::CMplot(input$CMplot,
@@ -362,7 +364,9 @@ plotEWAS <- function(input,
 
 
   lubridate::now() -> NowTime
-  message("EWAS Visualization has completed! \nYou can find results in ",input$outpath, ".\n", NowTime, "\n")
+  message("EWAS visualization completed successfully.\n",
+          "Plots saved to: ", input$outpath, "\n",
+          "Timestamp: ", NowTime)
 
   tictoc::toc()
 

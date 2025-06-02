@@ -45,14 +45,24 @@ bootEWAS = function(input,
                     filename = "default"){
 
   tictoc::tic()
-  message("Starting bootstrap-based internal validation...")
+  if (is.null(input$result)) {
+    stop("No EWAS result found in 'input$result'. Please run startEWAS() first.")
+  }
+  if (!filterP %in% colnames(input$result)) {
+    stop("The specified filterP column '", filterP, "' was not found in the EWAS results.")
+  }
   if (!bootCI %in% c("norm", "perc", "basic", "stud", "bca")) {
     stop("Invalid 'bootCI' value. Must be one of 'norm', 'perc', 'basic', 'stud', 'bca'.")
   }
 
 
+
+  message("Starting bootstrap-based internal validation...")
   if (is.null(CpGs)) {
     sig_probes <- input$result$probe[input$result[[filterP]] < cutoff]
+    if (length(sig_probes) == 0) {
+      stop("No CpG sites meet the filtering criteria (", filterP, " < ", cutoff, ").")
+    }
     message(length(sig_probes), " CpG sites selected by ", filterP, " < ", cutoff)
   } else {
     sig_probes <- unlist(strsplit(CpGs, ","))
@@ -83,6 +93,9 @@ bootEWAS = function(input,
   if (length(sig_probes) == 0) {
     stop("No CpG sites meet the filtering criteria.\nTime: ", lubridate::now())
   }else{
+
+    message(length(sig_probes), " CpG sites selected for bootstrap analysis.")
+    message("Bootstrap confidence interval method: ", bootCI)
     if(input$model == "lm"){
       coef_function <- function(data, formula, indices) {
         d <- data[indices,] #allows boot to select sample
@@ -158,7 +171,7 @@ bootEWAS = function(input,
       }
 
       lubridate::now()  -> NowTime
-      message(paste0("Bootstrap for internal validation has been completed !\nYou can find results in ",input$outpath, ".\n", NowTime))
+      message(paste0("Bootstrap for internal validation has been completed!\nYou can find results in ",input$outpath, ".\n", NowTime))
 
       tictoc::toc()
 

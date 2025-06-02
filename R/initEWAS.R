@@ -41,14 +41,18 @@ initEWAS <- function(outpath = "default"){
     file.path(getwd(), "EWASresult") -> input$outpath
     dir.create(input$outpath)
     lubridate::now() -> NowTime
-    message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
-            NowTime, "\n")
+    message("EWAS module has been successfully initialized.\n",
+            "Results will be saved to: ", input$outpath, "\n",
+            "Initialization time: ", NowTime, "\n")
+
   }else if(outpath != "default" & file.exists(outpath)){
     input$outpath <- file.path(outpath, "EWASresult") -> input$outpath
     dir.create(input$outpath)
     lubridate::now() -> NowTime
-    message("Complete initializing the EWAS module! Your EWAS results will be stored in ",input$outpath, "\n",
-            NowTime, "\n")
+    message("EWAS module has been successfully initialized.\n",
+            "Results will be saved to: ", input$outpath, "\n",
+            "Initialization time: ", NowTime, "\n")
+
   }else if(outpath != "default" & !file.exists(outpath)){
     stop("Invalid path: '", outpath, "'. Please provide a valid existing directory.")
   }

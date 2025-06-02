@@ -24,21 +24,21 @@ transEWAS <- function(input,
   tictoc::tic()
 
   lubridate::now() -> NowTime
-  
+
   if (!TypeTo %in% c("numeric", "factor")) {
-    stop("Error: 'TypeTo' must be either 'numeric' or 'factor'.")
+    stop("'TypeTo' must be either 'numeric' or 'factor'.")
   }
-  
+
 
   VarName = unlist(strsplit(Vars,","))
-  
+
   missing_vars <- setdiff(VarName, colnames(input$Data$Expo))
   if (length(missing_vars) > 0) {
     stop("Error: The following variables are not found in the exposure data: ",
          paste(missing_vars, collapse = ", "))
   }
-  
-  
+
+
   if(all(VarName == "default")){
     VarName = "cov1"
   }
@@ -48,7 +48,7 @@ transEWAS <- function(input,
 
     tictoc::toc()
 
-    stop("Error: No exposure data or methylation data were found!")
+    stop("Exposure data or methylation data is missing. Please run loadEWAS() first.")
 
     return(input)
 
@@ -70,7 +70,11 @@ transEWAS <- function(input,
     )
 
     rm(df.all)
-    message("Variable types have been transformed successfully!")
+    message("Variable type conversion completed successfully.\n",
+            "Converted variables: ", paste(VarName, collapse = ", "), "\n",
+            "Target type: ", TypeTo, "\n",
+            "Timestamp: ", NowTime, "\n")
+
 
     tictoc::toc()
 

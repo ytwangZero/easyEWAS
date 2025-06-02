@@ -19,7 +19,7 @@
 #' with each name separated by a comma. Ensure that when correcting for batch effects, the effects
 #' of other factors are appropriately considered and adjusted for.Ensure there are no space. e.g.
 #' "cov1,cov2".
-#' @param parallel Logical. Whether to enable parallel computing during batch effect correction. 
+#' @param parallel Logical. Whether to enable parallel computing during batch effect correction.
 #' Default is \code{FALSE}.
 #' @param core Integer. Number of CPU cores to use if \code{parallel = TRUE}. Default is \code{NULL}.
 #'
@@ -53,9 +53,9 @@ batchEWAS = function(input,
 
   dfcpg = as.matrix(input$Data$Methy[,-1])
   rownames(dfcpg) = input$Data$Methy[[1]]
-  
+
   if (is.null(batch) || !(batch %in% colnames(input$Data$Expo))) {
-    stop("Error: 'batch' must be a valid column name in the sample data.")
+    stop("'batch' must be a valid column name in the sample data.")
   }
   batch = input$Data$Expo[[batch]]
 
@@ -65,26 +65,27 @@ batchEWAS = function(input,
     var = unlist(strsplit(adjustVar, ","))
     missing_vars <- setdiff(var, colnames(input$Data$Expo))
     if (length(missing_vars) > 0) {
-      stop("Error: These variables are not found in sample data: ",
+      stop("These variables are not found in sample data: ",
            paste(missing_vars, collapse = ", "))
     }
     ff = as.formula(paste0("~",paste(var, collapse = " + ")))
     mod <- model.matrix(ff, data = input$Data$Expo)
   }
 
-  message("Start to adjust batch effects, please be patient ...")
+  message("Starting batch effect adjustment using ComBat. This may take some time...")
+
   if(plot){
     pdf(file = file.path(input$outpath, "combat_plots.pdf"), width = 8, height = 8)
-    
+
     if(parallel){
-      
+
       if (.Platform$OS.type == "windows") {
         BPPARAM <- BiocParallel::SnowParam(workers = core)
       } else {
         BPPARAM <- BiocParallel::MulticoreParam(workers = core)
       }
       message("Running ComBat in parallel using ", core, " core(s).")
-      
+
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                          batch = batch,
                                          mod = mod,
@@ -93,9 +94,9 @@ batchEWAS = function(input,
                                          mean.only = mean.only,
                                          ref.batch = ref.batch,
                                          BPPARAM = BPPARAM))
-      
+
     }else{
-      
+
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                               batch = batch,
                                               mod = mod,
@@ -103,22 +104,22 @@ batchEWAS = function(input,
                                               prior.plots=TRUE,
                                               mean.only = mean.only,
                                               ref.batch = ref.batch))
-      
+
     }
-    
+
     dev.off()
     message("A diagnostic plot was saved to: ", file.path(input$outpath, "combat_plots.pdf"))
   }else{
-    
+
     if(parallel){
-      
+
       if (.Platform$OS.type == "windows") {
         BPPARAM <- BiocParallel::SnowParam(workers = core)
       } else {
         BPPARAM <- BiocParallel::MulticoreParam(workers = core)
       }
       message("Running ComBat in parallel using ", core, " core(s).")
-      
+
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                               batch = batch,
                                               mod = mod,
@@ -127,9 +128,9 @@ batchEWAS = function(input,
                                               mean.only = mean.only,
                                               ref.batch = ref.batch,
                                               BPPARAM = BPPARAM))
-      
+
     }else{
-      
+
       ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
                                               batch = batch,
                                               mod = mod,
@@ -137,7 +138,7 @@ batchEWAS = function(input,
                                               prior.plots=FALSE,
                                               mean.only = mean.only,
                                               ref.batch = ref.batch))
-      
+
     }
   }
 
@@ -151,7 +152,9 @@ batchEWAS = function(input,
   input$Data$Methy = combat_data
 
   lubridate::now()  -> NowTime
-  message("Batch effect adjustment completed. Adjusted data is saved in: input$Data$Methy.\n", NowTime)
+  message("Batch effect adjustment completed successfully.\n",
+          "Adjusted methylation data is stored in: input$Data$Methy\n",
+          "Timestamp: ", NowTime, "\n")
   tictoc::toc()
 
   return(input)

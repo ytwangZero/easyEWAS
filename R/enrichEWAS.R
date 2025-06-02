@@ -83,6 +83,9 @@ enrichEWAS <- function(input,
   if (is.null(input$result)) {
     stop("No EWAS result found in 'input$result'.\nTime: ", NowTime)
   }
+  if (!filterP %in% colnames(input$result)) {
+    stop("The specified filterP column '", filterP, "' was not found in the EWAS results.")
+  }
   if (!method %in% c("GO", "KEGG")) {
     stop("Invalid method. Must be one of: 'GO', 'KEGG'")
   }
@@ -105,10 +108,13 @@ enrichEWAS <- function(input,
                     toType = c("ENTREZID"),
                     OrgDb = org.Hs.eg.db)
   )
-  message("Gene symbol conversion completed, and ", nrow(gene.df), " genes mapped.")
+  if (nrow(gene.df) == 0) {
+    stop("No gene symbols could be mapped to Entrez IDs. Please check input gene names.")
+  }
+  message("Gene symbol conversion completed: ", nrow(gene.df), " gene(s) mapped.")
 
   gene<-gene.df$ENTREZID
-  message("Start enrichment analysis ...")
+  message("Starting ", method, " enrichment analysis using clusterProfiler ...")
   if(method == "GO"){
 
     enres <- enrichGO(gene = gene,
@@ -136,7 +142,7 @@ enrichEWAS <- function(input,
 
 
   if (plot) {
-    message("Start result visualization ...")
+    message("Visualizing enrichment results as a ", plotType, " plot ...")
 
     # Check if there are results to plot
     if (nrow(enres@result) == 0) {
