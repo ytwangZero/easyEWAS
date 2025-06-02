@@ -9,7 +9,14 @@
 #' @param chipType The Illumina chip versions for user measurement of methylation data,
 #' including "450K","EPICV1", and "EPICV2". The default is "EPICV2".
 #' @param what Types of methylation values, including "Beta" and "M". Default to "Beta".
-#' @param genome Reference genome for annotating DMRs. Can be one of "hg19" or "hg38".
+#' @param genome Reference genome for annotating DMRs.
+#' Must be consistent with the array platform used:
+#'
+#' - Use `"hg38"` for EPICV2 arrays.
+#' - Use `"hg19"` for 450K and EPICV1 arrays.
+#'
+#' Note: the `genome` argument does not currently affect the internal behavior of `extractRanges()`
+#' (i.e., no liftover is performed).
 #' @param lambda  If the distance between two significant CpG sites is greater than or equal
 #' to lambda, they will be considered as belonging to different DMRs. The default value is 1000
 #' nucleotides, meaning that if the distance between two significant CpG sites exceeds 1000
@@ -40,9 +47,8 @@
 #' @import dplyr
 #' @importFrom ddpcr quiet
 #' @importFrom vroom vroom_write
-#' @import stringr
 #' @importFrom tictoc tic toc
-#' @import DMRcate
+#' @importFrom DMRcate cpg.annotate dmrcate extractRanges
 #' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
@@ -67,8 +73,6 @@ dmrEWAS = function(input,
                    min.cpgs = 2,
                    filename = "default"
                    ){
-  options('download.file.method.GEOquery'='auto')
-  options('GEOquery.inmemory.gpl'=FALSE)
 
   if (!chipType %in% c("EPICV2", "EPICV1", "450K")) {
     stop("Invalid 'chipType'. Must be one of: 'EPICV2', 'EPICV1', or '450K'.")
@@ -76,21 +80,22 @@ dmrEWAS = function(input,
   if (!genome %in% c("hg19", "hg38")) {
     stop("Invalid 'genome'. Must be 'hg19' or 'hg38'.")
   }
-  valid_filters <- c("mean", "sensitivity", "precision", "random")
-  if (!epicv2Filter %in% valid_filters) {
-    stop("Invalid 'epicv2Filter'. Must be one of: ", paste(valid_filters, collapse = ", "))
+  if (!epicv2Filter %in% c("mean", "sensitivity", "precision", "random")) {
+    stop("Invalid 'epicv2Filter'. Choose from: mean, sensitivity, precision, random.")
   }
   if (is.null(expo) || !expo %in% colnames(input$Data$Expo)) {
     stop("Exposure variable is missing or not found in input$Data$Expo.")
   }
 
+
+  cov_list <- if (!is.null(cov)) strsplit(cov, ",")[[1]] else character(0)
   if (!is.null(cov)) {
-    cov_list <- strsplit(cov, ",")[[1]]
     missing_covs <- setdiff(cov_list, colnames(input$Data$Expo))
     if (length(missing_covs) > 0) {
       stop("Covariates not found in input$Data$Expo: ", paste(missing_covs, collapse = ", "))
     }
   }
+
 
 
   tictoc::tic()
@@ -106,14 +111,10 @@ dmrEWAS = function(input,
   rownames(dfcpg) = input$Data$Methy[[1]]
   if(arraytype == "EPICv2"){
     message("Filtering out position replicates from an EPICv2 beta- or M-matrix. Please be patient...")
-    # ddpcr::quiet(dfcpg <- rmPosReps(dfcpg, filter.strategy="mean"))
-    # repnum = nrow(input$Data$Methy) - nrow(dfcpg)
-    # message("A total of ", repnum,  " replicates have been removed.")
   }
 
-  covname = strsplit(cov, ",")
-  ff = as.formula(paste0("~ ",paste(c(expo, covname[[1]]), collapse = " + ")))
-  design <- model.matrix(ff, data = input$Data$Expo)
+  formula <- reformulate(termlabels = c(expo, cov_list))
+  design <- model.matrix(formula, data = input$Data$Expo)
 
   # DMR analysis ---
   message("Starting the differentially methylated region analysis. Please be patient...")
@@ -126,13 +127,14 @@ dmrEWAS = function(input,
   ddpcr::quiet(results.ranges <- extractRanges(dmrcoutput, genome = genome))
   input$dmrres = as.data.frame(results.ranges)
 
+  message(length(myannotation@ranges), " CpGs used for DMR analysis.")
+  message(length(results.ranges), " DMRs detected.")
+
 
   # save result ---
-  if(filename == "default"){
-    vroom::vroom_write(input$dmrres, paste0(input$outpath, "/DMRresult.csv"), ",")
-  }else{
-    vroom::vroom_write(input$dmrres, paste0(input$outpath, "/",filename, ".csv"), ",")
-  }
+  outfile <- if (filename == "default") "DMRresult.csv" else paste0(filename, ".csv")
+  vroom::vroom_write(input$dmrres, file.path(input$outpath, outfile), delim = ",")
+
 
   lubridate::now()  -> NowTime
   message(paste0("Differentially Methylated Region analysis has been completed!\nYou can find results in ",input$outpath, ".\n", NowTime))
