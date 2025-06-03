@@ -41,7 +41,7 @@
 batchEWAS = function(input,
                    adjustVar = NULL,
                    batch = NULL,
-                   plot = TRUE,
+                   plot = FALSE,
                    par.prior = TRUE,
                    mean.only = FALSE,
                    ref.batch = NULL,
