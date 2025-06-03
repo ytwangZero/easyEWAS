@@ -8,7 +8,7 @@
 #' @param input An R6 class integrated with all the information.
 #' @param batch Name of the batch variable.
 #' @param plot Logical. TRUE give prior plots with black as a kernel estimate of the empirical
-#' batch effect density and red as the parametric. Thr default is FALSE
+#' batch effect density and red as the parametric. Thr default is FALSE.
 #' @param par.prior Logical. TRUE indicates parametric adjustments will be used, FALSE indicates
 #' non-parametric adjustments will be used.
 #' @param mean.only Logical. Default to FALSE. If TRUE, ComBat only corrects the mean of the

@@ -99,7 +99,45 @@ startEWAS = function(input,
   # ----------------------------------------------------------
   # Define EWAS model fitting function based on selected model
   # ----------------------------------------------------------
+  if(model %in% "lm"){
 
+    ewasfun <- function(cg, ff, cov, facnum) {
+      cov$cpg <- as.vector(t(cg))
+      res <- tryCatch({
+        out <- summary(stats::lm(ff, data = cov))
+        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 4)]))
+      }, error = function(e) {
+        rep(NA_real_, 3 * (facnum - 1))
+      })
+      return(res)
+    }
+
+  }else if(model %in% "lmer"){
+
+    ewasfun <- function(cg, ff, cov, facnum) {
+      cov$cpg <- as.vector(t(cg))
+      res <- tryCatch({
+        out <- summary(lmerTest::lmer(ff, data = cov))
+        unlist(lapply(2:facnum, function(i) out$coefficients[i, c(1, 2, 5)]))
+      }, error = function(e) {
+        rep(NA_real_, 3 * (facnum - 1))
+      })
+      return(res)
+    }
+
+  }else if(model %in% "cox"){
+
+    ewasfun <- function(cg, ff, cov) {
+      cov$cpg <- as.vector(t(cg))
+      res <- tryCatch({
+        out <- summary(survival::coxph(ff, data = cov))
+        c(as.vector(out$conf.int[1, c(1, 3, 4)]), out$coefficients[1, 5])
+      }, error = function(e) {
+        rep(NA_real_, 4)
+      })
+      return(res)
+    }
+  }
   model -> input$model
 
   # -----------------------------
@@ -129,7 +167,7 @@ startEWAS = function(input,
     input$time <- time
     input$status <- status
   }
-  input$covdata <- covdata
+  # input$covdata <- covdata
 
   # -----------------------------
   # Build model formula
@@ -151,8 +189,9 @@ startEWAS = function(input,
   # Extract methylation beta matrix
   # --------------------------------
   sample_names <- input$Data$Expo[[1]]
-  df_beta <- input$Data$Methy[, sample_names, drop = FALSE]
-  rownames(df_beta) <- input$Data$Methy[[1]]
+  probe_names <- input$Data$Methy[[1]]
+  input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
+  rownames(input$Data$Methy) <- probe_names
 
   preprocess_end_time <- Sys.time()
   message("EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
@@ -161,7 +200,7 @@ startEWAS = function(input,
   # Set up parallel computation
   # -----------------------------
   message("Starting parallel computation setup ...")
-  len = nrow(df_beta)
+  len = nrow(input$Data$Methy)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
                         "lm" = 3 * (facnum - 1),
@@ -173,15 +212,8 @@ startEWAS = function(input,
     cl <- makeCluster(no_cores)
     registerDoParallel(cl)
 
-    if (model == "lm") {
-      clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
-    } else if (model == "lmer") {
-      clusterEvalQ(cl, library(lmerTest))
-      clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
-    } else if (model == "cox") {
-      clusterEvalQ(cl, library(survival))
-      clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
-    }
+    if (model == "lmer") clusterEvalQ(cl, library(lmerTest))
+    if (model == "cox") clusterEvalQ(cl, library(survival))
 
 
   })["elapsed"]
@@ -200,12 +232,10 @@ startEWAS = function(input,
       for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
         restemp[x - (i-1)*chunk.size,] <- as.numeric(
 
-          t(if (model == "lm") {
-            ewasfun_lm(df_beta[x, ], formula, covdata, facnum)
-          } else if (model == "lmer") {
-            ewasfun_lmer(df_beta[x, ], formula, covdata, facnum)
-          } else if (model == "cox") {
-            ewasfun_cox(df_beta[x, ], formula, covdata)
+          t(if (model %in% c("lm","lmer")) {
+            ewasfun(input$Data$Methy[x, ], formula, covdata, facnum)
+          }else if (model == "cox") {
+            ewasfun(input$Data$Methy[x, ], formula, covdata)
           })
         )
       }
@@ -214,7 +244,7 @@ startEWAS = function(input,
 
   stopImplicitCluster()
   stopCluster(cl)
-  modelres = as.data.frame(modelres[1:len,])
+  modelres = as.data.frame(modelres)
 
   ewas_end_time <- Sys.time()
   message(sprintf("Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
@@ -230,7 +260,7 @@ startEWAS = function(input,
       colnames(modelres)[1:(3 * (facnum - 1))] <- paste0(
         rep(c("BETA", "SE", "PVAL"), facnum - 1), "_", rep(1:(facnum - 1), each = 3)
       )
-      modelres <- cbind(probe = rownames(df_beta), modelres)
+      modelres <- cbind(probe = rownames(input$Data$Methy), modelres)
 
       ## FDR pr Bonferroni adjustment---
       if(adjustP){
@@ -254,7 +284,7 @@ startEWAS = function(input,
     }else if(!is.factor(input$Data$Expo[[expo]])){
 
       names(modelres)[1:3] <- c("BETA", "SE", "PVAL")
-      modelres <- cbind(probe = rownames(df_beta), modelres)
+      modelres <- cbind(probe = probe_names, modelres)
 
       ## per SD & IQR---
       modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
@@ -278,7 +308,7 @@ startEWAS = function(input,
 
     modelres <- as.data.frame(modelres)
     colnames(modelres) <- c("HR", "LOWER_95%", "UPPER_95%", "PVAL")
-    modelres$probe <- rownames(df_beta)
+    modelres$probe <- rownames(input$Data$Methy)
     modelres <- modelres[, c("probe", "HR", "LOWER_95%", "UPPER_95%", "PVAL")]
 
     ##  FDR pr Bonferroni adjustment---

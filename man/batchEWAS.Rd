@@ -4,7 +4,7 @@
 \alias{batchEWAS}
 \title{Perform batch effect correction}
 \usage{
-batchEWAS(input,adjustVar = NULL,batch = NULL, plot = TRUE, par.prior = TRUE,
+batchEWAS(input,adjustVar = NULL,batch = NULL, plot = FALSE, par.prior = TRUE,
 mean.only = FALSE,ref.batch = NULL)
 }
 \arguments{
@@ -18,7 +18,7 @@ of other factors are appropriately considered and adjusted for.Ensure there are 
 \item{batch}{Name of the batch variable.}
 
 \item{plot}{Logical. TRUE give prior plots with black as a kernel estimate of the empirical
-batch effect density and red as the parametric.}
+batch effect density and red as the parametric. Thr default is FALSE.}
 
 \item{par.prior}{Logical. TRUE indicates parametric adjustments will be used, FALSE indicates
 non-parametric adjustments will be used.}
