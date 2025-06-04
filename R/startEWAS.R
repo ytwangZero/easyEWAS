@@ -280,7 +280,7 @@ startEWAS = function(input,
 
     modelres <- as.data.frame(modelres)
     colnames(modelres) <- c("HR", "LOWER_95%", "UPPER_95%", "PVAL")
-    modelres$probe <- rownames(input$Data$Methy)
+    modelres$probe <- probe_names
     modelres <- modelres[, c("probe", "HR", "LOWER_95%", "UPPER_95%", "PVAL")]
 
     ##  FDR pr Bonferroni adjustment---
