@@ -51,8 +51,8 @@ batchEWAS = function(input,
 
   tictoc::tic()
 
-  dfcpg = as.matrix(input$Data$Methy[,-1])
-  rownames(dfcpg) = input$Data$Methy[[1]]
+  dfcpg = as.matrix(input$Data$Methy)
+  # rownames(dfcpg) = rownames(input$Data$Methy)
 
   if (is.null(batch) || !(batch %in% colnames(input$Data$Expo))) {
     stop("'batch' must be a valid column name in the sample data.")
@@ -142,14 +142,7 @@ batchEWAS = function(input,
     }
   }
 
-
-  combat_data = combat_data %>%
-    as.data.frame() %>%
-    mutate(probe = input$Data$Methy[[1]]) %>%
-    dplyr::select(probe, everything())
-  rownames(combat_data) = NULL
-
-  input$Data$Methy = combat_data
+  input$Data$Methy = as.data.frame(combat_data)
 
   lubridate::now()  -> NowTime
   message("Batch effect adjustment completed successfully.\n",

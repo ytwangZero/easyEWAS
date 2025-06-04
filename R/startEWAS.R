@@ -146,14 +146,6 @@ startEWAS = function(input,
   )
   formula -> input$formula
 
-  # --------------------------------
-  # Extract methylation beta matrix
-  # --------------------------------
-  sample_names <- input$Data$Expo[[1]]
-  probe_names <- input$Data$Methy[[1]]
-  input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
-  rownames(input$Data$Methy) <- probe_names
-
   preprocess_end_time <- Sys.time()
   message("EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
 
@@ -232,7 +224,7 @@ startEWAS = function(input,
       colnames(modelres)[1:(3 * (facnum - 1))] <- paste0(
         rep(c("BETA", "SE", "PVAL"), facnum - 1), "_", rep(1:(facnum - 1), each = 3)
       )
-      modelres <- cbind(probe = probe_names, modelres)
+      modelres <- cbind(probe = rownames(input$Data$Methy), modelres)
 
       ## FDR pr Bonferroni adjustment---
       if(adjustP){
@@ -256,7 +248,7 @@ startEWAS = function(input,
     }else if(!is.factor(input$Data$Expo[[expo]])){
 
       names(modelres)[1:3] <- c("BETA", "SE", "PVAL")
-      modelres <- cbind(probe = probe_names, modelres)
+      modelres <- cbind(probe = rownames(input$Data$Methy), modelres)
 
       ## per SD & IQR---
       modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
@@ -280,7 +272,7 @@ startEWAS = function(input,
 
     modelres <- as.data.frame(modelres)
     colnames(modelres) <- c("HR", "LOWER_95%", "UPPER_95%", "PVAL")
-    modelres$probe <- probe_names
+    modelres$probe <- rownames(input$Data$Methy)
     modelres <- modelres[, c("probe", "HR", "LOWER_95%", "UPPER_95%", "PVAL")]
 
     ##  FDR pr Bonferroni adjustment---

@@ -69,6 +69,11 @@ loadEWAS <- function(input,
             as.data.frame() -> input$Data$Methy
         }
       )
+      sample_names <- input$Data$Expo[[1]]
+      probe_names <- input$Data$Methy[[1]]
+
+      input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
+      rownames(input$Data$Methy) <- probe_names
 
       lubridate::now() -> NowTime
       message("All data files have been successfully loaded.\n",
@@ -96,11 +101,15 @@ loadEWAS <- function(input,
 
         data("sampledata", package = "easyEWAS", envir = environment())
         sampledata -> input$Data$Expo
-        # rm("sampledata")
 
         data("methydata", package = "easyEWAS", envir = environment())
         methydata -> input$Data$Methy
-        # rm("methydata")
+
+        sample_names <- input$Data$Expo[[1]]
+        probe_names <- input$Data$Methy[[1]]
+
+        input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
+        rownames(input$Data$Methy) <- probe_names
 
         lubridate::now() -> NowTime
         message("Example sample data and methylation data have been successfully loaded.\n",
@@ -124,6 +133,12 @@ loadEWAS <- function(input,
       #### R environment data------
       ExpoData -> input$Data$Expo
       MethyData -> input$Data$Methy
+
+      sample_names <- input$Data$Expo[[1]]
+      probe_names <- input$Data$Methy[[1]]
+
+      input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
+      rownames(input$Data$Methy) <- probe_names
 
       lubridate::now() -> NowTime
       message("All data files have been successfully loaded.\n",
