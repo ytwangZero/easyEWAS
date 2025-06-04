@@ -99,7 +99,6 @@ startEWAS = function(input,
   # ----------------------------------------------------------
   # Define EWAS model fitting function based on selected model
   # ----------------------------------------------------------
-
   model -> input$model
 
   # -----------------------------
@@ -129,7 +128,7 @@ startEWAS = function(input,
     input$time <- time
     input$status <- status
   }
-  input$covdata <- covdata
+  # input$covdata <- covdata
 
   # -----------------------------
   # Build model formula
@@ -151,8 +150,9 @@ startEWAS = function(input,
   # Extract methylation beta matrix
   # --------------------------------
   sample_names <- input$Data$Expo[[1]]
-  df_beta <- input$Data$Methy[, sample_names, drop = FALSE]
-  rownames(df_beta) <- input$Data$Methy[[1]]
+  probe_names <- input$Data$Methy[[1]]
+  input$Data$Methy <- input$Data$Methy[, sample_names, drop = FALSE]
+  rownames(input$Data$Methy) <- probe_names
 
   preprocess_end_time <- Sys.time()
   message("EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
@@ -161,7 +161,7 @@ startEWAS = function(input,
   # Set up parallel computation
   # -----------------------------
   message("Starting parallel computation setup ...")
-  len = nrow(df_beta)
+  len = nrow(input$Data$Methy)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
                         "lm" = 3 * (facnum - 1),
@@ -183,7 +183,6 @@ startEWAS = function(input,
       clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
     }
 
-
   })["elapsed"]
 
   message("Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
@@ -194,6 +193,8 @@ startEWAS = function(input,
   message("Running parallel EWAS model fitting ...")
   ewas_start_time <- Sys.time()
 
+
+
   modelres <- foreach(i=1:no_cores, .combine='rbind', .errorhandling = "pass") %dopar%
     {
       restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
@@ -201,12 +202,13 @@ startEWAS = function(input,
         restemp[x - (i-1)*chunk.size,] <- as.numeric(
 
           t(if (model == "lm") {
-            ewasfun_lm(df_beta[x, ], formula, covdata, facnum)
+            ewasfun_lm(input$Data$Methy[x, ], formula, covdata, facnum)
           } else if (model == "lmer") {
-            ewasfun_lmer(df_beta[x, ], formula, covdata, facnum)
+            ewasfun_lmer(input$Data$Methy[x, ], formula, covdata, facnum)
           } else if (model == "cox") {
-            ewasfun_cox(df_beta[x, ], formula, covdata)
+            ewasfun_cox(input$Data$Methy[x, ], formula, covdata)
           })
+
         )
       }
       restemp
@@ -214,7 +216,7 @@ startEWAS = function(input,
 
   stopImplicitCluster()
   stopCluster(cl)
-  modelres = as.data.frame(modelres[1:len,])
+  modelres = as.data.frame(modelres)
 
   ewas_end_time <- Sys.time()
   message(sprintf("Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
@@ -230,7 +232,7 @@ startEWAS = function(input,
       colnames(modelres)[1:(3 * (facnum - 1))] <- paste0(
         rep(c("BETA", "SE", "PVAL"), facnum - 1), "_", rep(1:(facnum - 1), each = 3)
       )
-      modelres <- cbind(probe = rownames(df_beta), modelres)
+      modelres <- cbind(probe = probe_names, modelres)
 
       ## FDR pr Bonferroni adjustment---
       if(adjustP){
@@ -254,7 +256,7 @@ startEWAS = function(input,
     }else if(!is.factor(input$Data$Expo[[expo]])){
 
       names(modelres)[1:3] <- c("BETA", "SE", "PVAL")
-      modelres <- cbind(probe = rownames(df_beta), modelres)
+      modelres <- cbind(probe = probe_names, modelres)
 
       ## per SD & IQR---
       modelres$BETA_perSD = (modelres$BETA)*(sd(covdata[[expo]],na.rm = TRUE))
@@ -278,7 +280,7 @@ startEWAS = function(input,
 
     modelres <- as.data.frame(modelres)
     colnames(modelres) <- c("HR", "LOWER_95%", "UPPER_95%", "PVAL")
-    modelres$probe <- rownames(df_beta)
+    modelres$probe <- rownames(input$Data$Methy)
     modelres <- modelres[, c("probe", "HR", "LOWER_95%", "UPPER_95%", "PVAL")]
 
     ##  FDR pr Bonferroni adjustment---
