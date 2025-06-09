@@ -80,8 +80,7 @@ bootEWAS = function(input,
   df_beta <- input$Data$Methy[input$Data$Methy[[probe_col]] %in% sig_probes, c(probe_col, sample_ids)]
   rownames(df_beta) <- df_beta[[probe_col]]
   df_beta[[probe_col]] <- NULL
-  tdf_beta <- t(df_beta)
-  df <- cbind(input$covdata, tdf_beta)
+  df <- as.data.frame(cbind(input$covdata, t(df_beta)))
 
   #### peform bootstrap analysis---------------------
   input$result %>%
