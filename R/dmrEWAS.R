@@ -107,7 +107,7 @@ dmrEWAS = function(input,
     as.data.frame() %>%
     dplyr::select(input$Data$Expo[[1]]) %>%
     as.matrix() -> dfcpg
-  rownames(dfcpg) = input$Data$Methy[[1]]
+  # rownames(dfcpg) = input$Data$Methy[[1]]
 
   formula <- reformulate(termlabels = c(expo, cov_list))
   design <- model.matrix(formula, data = input$Data$Expo)
