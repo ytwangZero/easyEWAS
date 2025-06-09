@@ -74,12 +74,8 @@ bootEWAS = function(input,
     message(length(sig_probes), " CpG sites specified by user.")
   }
 
-  probe_col <- colnames(input$Data$Methy)[1]
-  sample_ids <- input$Data$Expo[[1]]
 
-  df_beta <- input$Data$Methy[input$Data$Methy[[probe_col]] %in% sig_probes, c(probe_col, sample_ids)]
-  rownames(df_beta) <- df_beta[[probe_col]]
-  df_beta[[probe_col]] <- NULL
+  df_beta <- input$Data$Methy[rownames(input$Data$Methy) %in% sig_probes, input$Data$Expo[[1]]]
   df <- as.data.frame(cbind(input$covdata, t(df_beta)))
 
   #### peform bootstrap analysis---------------------

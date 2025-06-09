@@ -111,6 +111,7 @@ startEWAS = function(input,
                           "cox"  = c(time, status, VarCov)
   )
   covdata <- input$Data$Expo[, required_cols, drop = FALSE]
+  input$covdata <- covdata
 
   # Rename variables based on model needs
   if (model == "lmer") {
