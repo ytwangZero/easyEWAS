@@ -51,8 +51,6 @@ batchEWAS = function(input,
 
   tictoc::tic()
 
-  dfcpg = as.matrix(input$Data$Methy)
-  # rownames(dfcpg) = rownames(input$Data$Methy)
 
   if (is.null(batch) || !(batch %in% colnames(input$Data$Expo))) {
     stop("'batch' must be a valid column name in the sample data.")
@@ -72,6 +70,8 @@ batchEWAS = function(input,
     mod <- model.matrix(ff, data = input$Data$Expo)
   }
 
+  dfcpg = as.matrix(input$Data$Methy)
+
   message("Starting batch effect adjustment using ComBat. This may take some time...")
 
   if(plot){
@@ -86,24 +86,40 @@ batchEWAS = function(input,
       }
       message("Running ComBat in parallel using ", core, " core(s).")
 
-      ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
-                                         batch = batch,
-                                         mod = mod,
-                                         par.prior=par.prior,
-                                         prior.plots=TRUE,
-                                         mean.only = mean.only,
-                                         ref.batch = ref.batch,
-                                         BPPARAM = BPPARAM))
+      combat_data <- tryCatch({
+        ddpcr::quiet(
+          sva::ComBat(dat = dfcpg,
+                      batch = batch,
+                      mod = mod,
+                      par.prior = par.prior,
+                      prior.plots = TRUE,
+                      mean.only = mean.only,
+                      ref.batch = ref.batch,
+                      BPPARAM = BPPARAM)
+        )
+      }, error = function(e) {
+        dev.off()
+        stop("ComBat failed with prior.plots = TRUE: ", e$message,
+             "\nSuggestion: Set plot = FALSE or check your input data for problematic probes.")
+      })
 
     }else{
 
-      ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
-                                              batch = batch,
-                                              mod = mod,
-                                              par.prior=par.prior,
-                                              prior.plots=TRUE,
-                                              mean.only = mean.only,
-                                              ref.batch = ref.batch))
+      combat_data <- tryCatch({
+        ddpcr::quiet(
+          sva::ComBat(dat = dfcpg,
+                      batch = batch,
+                      mod = mod,
+                      par.prior = par.prior,
+                      prior.plots = TRUE,
+                      mean.only = mean.only,
+                      ref.batch = ref.batch)
+        )
+      }, error = function(e) {
+        dev.off()
+        stop("ComBat failed with prior.plots = TRUE: ", e$message,
+             "\nSuggestion: Set plot = FALSE or check your input data for problematic probes.")
+      })
 
     }
 
@@ -142,7 +158,7 @@ batchEWAS = function(input,
     }
   }
 
-  input$Data$Methy = as.data.frame(combat_data)
+  input$Data$Methy <-  as.data.frame(combat_data)
 
   lubridate::now()  -> NowTime
   message("Batch effect adjustment completed successfully.\n",

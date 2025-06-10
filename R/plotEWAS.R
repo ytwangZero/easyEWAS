@@ -17,16 +17,12 @@
 #'          pch = 19,
 #'          type = "p",
 #'          band = 1,
-#'          H = 1.5,
 #'          ylim = NULL,
 #'          axis.cex = 1,
 #'          axis.lwd = 1.5,
 #'          lab.cex = 1.5,
 #'          lab.font = 2,
 #'          plot.type = c("m", "c", "q", "d"),
-#'          multracks = FALSE,
-#'          multracks.xaxis = FALSE,
-#'          multraits = FALSE,
 #'          points.alpha = 100L,
 #'          r = 0.3,
 #'          cex = c(0.5, 1, 1),
@@ -35,7 +31,6 @@
 #'          ylab.pos = 3,
 #'          xticks.pos = 1,
 #'          mar = c(3, 6, 3, 3),
-#'          mar.between = 0,
 #'          threshold.col = "red",
 #'          threshold.lwd = 1,
 #'          threshold.lty = 2,
@@ -58,7 +53,6 @@
 #'          chr.labels.angle = 0,
 #'          chr.den.col = "black",
 #'          chr.pos.max = FALSE,
-#'          cir.band = 1,
 #'          cir.chr = TRUE,
 #'          cir.chr.h = 1.5,
 #'          cir.axis = TRUE,
@@ -74,7 +68,6 @@
 #'          main = "",
 #'          main.cex = 1.5,
 #'          main.font = 2,
-#'          legend.ncol = NULL,
 #'          legend.cex = 1,
 #'          legend.pos = c("left", "middle", "right"),
 #'          box = FALSE,
@@ -90,6 +83,7 @@
 #' the number of chromosomes, the colors will be applied cyclically.
 #' @param LOG10 logical, whether to change the p-value into log10(p-value) scale.
 #' @param pch a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.
+#' @param points.alpha Integer. Transparency (alpha) value for points (0–255). Default is 100.
 #' @param type a character, could be "p" (point), "l" (cross line), "h" (vertical lines) and so on,
 #' is the same with "type" in \code{\link[plot]{plot}}.
 #' @param band a number, the size of space between chromosomes, the default is 1.
@@ -365,7 +359,7 @@ plotEWAS <- function(input,
 
   lubridate::now() -> NowTime
   message("EWAS visualization completed successfully.\n",
-          "Plots saved to: ", input$outpath, "\n",
+          "Plots saved to: ", input$outpath, ".\n",
           "Timestamp: ", NowTime)
 
   tictoc::toc()

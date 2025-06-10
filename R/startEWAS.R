@@ -64,6 +64,10 @@ startEWAS = function(input,
 ){
   tictoc::tic()
 
+  if (!model %in% c("lm", "lmer", "cox")) {
+    stop("Invalid model type. Please choose one of 'lm', 'lmer', or 'cox'.")
+  }
+
   message("Starting EWAS data preprocessing ...")
   preprocess_start_time <- Sys.time()
 
