@@ -90,7 +90,7 @@ bootEWAS = function(input,
   }else{
 
     message(length(sig_probes), " CpG sites selected for bootstrap analysis.")
-    message("Bootstrap confidence interval method: ", bootCI)
+    message("Bootstrap confidence interval method: ", bootCI, ".")
     if(input$model == "lm"){
       coef_function <- function(data, formula, indices) {
         d <- data[indices,] #allows boot to select sample

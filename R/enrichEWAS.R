@@ -183,7 +183,7 @@ enrichEWAS <- function(input,
 
 
   lubridate::now()  -> NowTime
-  message(paste0("Enrichment analysis has been completed !\nYou can find results in ",input$outpath, ".\n", NowTime))
+  message(paste0("Enrichment analysis has been completed! \nYou can find results in ",input$outpath, ".\n", NowTime))
 
   tictoc::toc()
 
