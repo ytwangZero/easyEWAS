@@ -40,7 +40,7 @@
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel stopImplicitCluster
 #' @importFrom vroom vroom_write
-#' @importFrom survival coxph
+#' @importFrom survival coxph Surv
 #' @importFrom lmerTest lmer
 #' @importFrom stats lm
 #' @examples \dontrun{
