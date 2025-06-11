@@ -25,7 +25,7 @@
 #' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
 #' @importFrom boot boot boot.ci
-#' @importFrom survival coxph
+#' @importFrom survival coxph Surv
 #' @importFrom lmerTest lmer
 #'
 #'
