@@ -100,10 +100,10 @@ loadEWAS <- function(input,
       if(ExpoData == "default" & MethyData == "default"){
 
         data("sampledata", package = "easyEWAS", envir = environment())
-        sampledata -> input$Data$Expo
+        as.data.frame(sampledata) -> input$Data$Expo
 
         data("methydata", package = "easyEWAS", envir = environment())
-        methydata -> input$Data$Methy
+        as.data.frame(methydata) -> input$Data$Methy
 
         sample_names <- input$Data$Expo[[1]]
         probe_names <- input$Data$Methy[[1]]
@@ -131,8 +131,8 @@ loadEWAS <- function(input,
     }else{
 
       #### R environment data------
-      ExpoData -> input$Data$Expo
-      MethyData -> input$Data$Methy
+      as.data.frame(ExpoData) -> input$Data$Expo
+      as.data.frame(MethyData) -> input$Data$Methy
 
       sample_names <- input$Data$Expo[[1]]
       probe_names <- input$Data$Methy[[1]]
