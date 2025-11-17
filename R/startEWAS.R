@@ -305,7 +305,7 @@ startEWAS = function(input,
       left_join(annotationV1, by = "probe") -> modelres
   }
   if(!is.null(chipType) & chipType == "450K"){
-    colnames(annotation450K) = c("probe","chr","pos","relation_to_island","gene","location","location")
+    colnames(annotation450K) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
       left_join(annotation450K, by = "probe") -> modelres
   }
@@ -315,7 +315,7 @@ startEWAS = function(input,
       left_join(annotation27K, by = "probe") -> modelres
   }
   if(!is.null(chipType) & chipType == "MSA"){
-    colnames(annotationMSA) = c("probe","chr","pos","relation_to_island","gene")
+    colnames(annotationMSA) = c("probe","chr","pos","relation_to_island","gene","location")
     modelres %>%
       left_join(annotationMSA, by = "probe") -> modelres
   }
@@ -352,4 +352,5 @@ startEWAS = function(input,
   return(input)
 
 }
+
 
