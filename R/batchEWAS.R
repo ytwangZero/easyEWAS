@@ -87,7 +87,6 @@ batchEWAS = function(input,
       message("Running ComBat in parallel using ", core, " core(s).")
 
       combat_data <- tryCatch({
-        ddpcr::quiet(
           sva::ComBat(dat = dfcpg,
                       batch = batch,
                       mod = mod,
@@ -96,7 +95,6 @@ batchEWAS = function(input,
                       mean.only = mean.only,
                       ref.batch = ref.batch,
                       BPPARAM = BPPARAM)
-        )
       }, error = function(e) {
         dev.off()
         stop("ComBat failed with prior.plots = TRUE: ", e$message,
@@ -106,7 +104,6 @@ batchEWAS = function(input,
     }else{
 
       combat_data <- tryCatch({
-        ddpcr::quiet(
           sva::ComBat(dat = dfcpg,
                       batch = batch,
                       mod = mod,
@@ -114,7 +111,6 @@ batchEWAS = function(input,
                       prior.plots = TRUE,
                       mean.only = mean.only,
                       ref.batch = ref.batch)
-        )
       }, error = function(e) {
         dev.off()
         stop("ComBat failed with prior.plots = TRUE: ", e$message,
@@ -136,24 +132,27 @@ batchEWAS = function(input,
       }
       message("Running ComBat in parallel using ", core, " core(s).")
 
-      ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
-                                              batch = batch,
-                                              mod = mod,
-                                              par.prior=par.prior,
-                                              prior.plots=FALSE,
-                                              mean.only = mean.only,
-                                              ref.batch = ref.batch,
-                                              BPPARAM = BPPARAM))
+      combat_data <- sva::ComBat(dat = dfcpg,
+                                 batch = batch,
+                                 mod = mod,
+                                 par.prior=par.prior,
+                                 prior.plots=FALSE,
+                                 mean.only = mean.only,
+                                 ref.batch = ref.batch,
+                                 BPPARAM = BPPARAM)
+                                              
+                                              
 
     }else{
 
-      ddpcr::quiet(combat_data <- sva::ComBat(dat = dfcpg,
-                                              batch = batch,
-                                              mod = mod,
-                                              par.prior=par.prior,
-                                              prior.plots=FALSE,
-                                              mean.only = mean.only,
-                                              ref.batch = ref.batch))
+      combat_data <- sva::ComBat(dat = dfcpg,
+                                 batch = batch,
+                                 mod = mod,
+                                 par.prior=par.prior,
+                                 prior.plots=FALSE,
+                                 mean.only = mean.only,
+                                 ref.batch = ref.batch,
+                                 BPPARAM = BPPARAM)
 
     }
   }
