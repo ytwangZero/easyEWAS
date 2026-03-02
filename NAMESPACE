@@ -2,6 +2,7 @@
 
 export(batchEWAS)
 export(bootEWAS)
+export(downloadAnnotEWAS)
 export(dmrEWAS)
 export(enrichEWAS)
 export(ewasfun_cox)

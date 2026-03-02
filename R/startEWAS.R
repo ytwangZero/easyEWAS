@@ -3,7 +3,10 @@
 #' deviation and significance p value (or adjust p value) of each site.
 #' @usage startEWAS(input, filename ="default", model = "lm", expo = "default",
 #' cov = NULL,random = NULL, time = NULL, status = NULL, chipType = "EPICV2",
-#' adjustP = TRUE, core = "default")
+#' adjustP = TRUE, core = "default", annotation_cache = NULL,
+#' auto_download_annotation = FALSE, annotation_base_url = getOption(
+#' "easyEWAS.annotation_base_url",
+#' "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation"))
 #'
 #' @param input An R6 class integrated with all the information obtained from the loadEWAS or
 #' transEWAS function.
@@ -30,6 +33,11 @@
 #'   - "MSA"
 #' @param core Number of CPU cores to use for parallel processing. If set to "default", uses the number
 #' of available physical cores minus one.
+#' @param annotation_cache Local directory for cached annotation files. If NULL, uses
+#' `tools::R_user_dir("easyEWAS", "cache")/annotation`.
+#' @param auto_download_annotation Logical. If TRUE, annotation files are downloaded
+#' automatically when missing.
+#' @param annotation_base_url Base URL for annotation `.rds` files.
 #' @return input, An R6 class object integrating all information.
 #' @export
 #' @import dplyr
@@ -47,6 +55,7 @@
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
+#' downloadAnnotEWAS(chipType = "EPICV2")
 #' res <- startEWAS(input = res, filename = "default", chipType = "EPICV2", model = "lm",
 #' expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
 #' }
@@ -60,12 +69,21 @@ startEWAS = function(input,
                      status = NULL,
                      adjustP = TRUE,
                      chipType = "EPICV2",
-                     core = "default"
+                     core = "default",
+                     annotation_cache = NULL,
+                     auto_download_annotation = FALSE,
+                     annotation_base_url = getOption(
+                       "easyEWAS.annotation_base_url",
+                       "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation"
+                     )
 ){
   tictoc::tic()
 
   if (!model %in% c("lm", "lmer", "cox")) {
     stop("Invalid model type. Please choose one of 'lm', 'lmer', or 'cox'.")
+  }
+  if (!is.null(chipType) && !chipType %in% c("27K", "450K", "EPICV1", "EPICV2", "MSA")) {
+    stop("Invalid chipType. Please choose one of '27K', '450K', 'EPICV1', 'EPICV2', or 'MSA'.")
   }
 
   message("Starting EWAS data preprocessing ...")
@@ -292,32 +310,22 @@ startEWAS = function(input,
   # ---------------------------------
   # Annotate CpG sites with chip info
   # ---------------------------------
-  message("Start CpG sites annotation ...")
+  if(!is.null(chipType)){
+    message("Start CpG sites annotation ...")
 
-  if(!is.null(chipType) & chipType == "EPICV2"){
-    colnames(annotationV2) = c("probe","chr","pos","relation_to_island","gene","location")
-    modelres %>%
-      left_join(annotationV2, by = "probe") -> modelres
-  }
-  if(!is.null(chipType) & chipType == "EPICV1"){
-    colnames(annotationV1) = c("probe","chr","pos","relation_to_island","gene","location")
-    modelres %>%
-      left_join(annotationV1, by = "probe") -> modelres
-  }
-  if(!is.null(chipType) & chipType == "450K"){
-    colnames(annotation450K) = c("probe","chr","pos","relation_to_island","gene","location")
-    modelres %>%
-      left_join(annotation450K, by = "probe") -> modelres
-  }
-  if(!is.null(chipType) & chipType == "27K"){
-    colnames(annotation27K) = c("probe","chr","pos","gene")
-    modelres %>%
-      left_join(annotation27K, by = "probe") -> modelres
-  }
-  if(!is.null(chipType) & chipType == "MSA"){
-    colnames(annotationMSA) = c("probe","chr","pos","relation_to_island","gene","location")
-    modelres %>%
-      left_join(annotationMSA, by = "probe") -> modelres
+    annotation_df <- .easyEWAS_load_annotation(
+      chipType = chipType,
+      cache_dir = annotation_cache,
+      auto_download = auto_download_annotation,
+      base_url = annotation_base_url
+    )
+    if (is.null(annotation_df)) {
+      stop("Annotation for chipType '", chipType, "' is not available in local cache.\n",
+           "Please run downloadAnnotEWAS(chipType = '", chipType, "') first,\n",
+           "or set auto_download_annotation = TRUE.")
+    }
+
+    modelres <- dplyr::left_join(modelres, annotation_df, by = "probe")
   }
 
   if (!is.null(chipType)) {

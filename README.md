@@ -40,6 +40,21 @@ To avoid these issues, we strongly recommend installing easyEWAS using the insta
 source("Install_easyEWAS.R")
 ``` 
 
+### Download annotation files (required for chip annotation in `startEWAS`)
+
+To keep the package lightweight, chip annotation tables are downloaded on demand
+and cached locally.
+
+```r
+downloadAnnotEWAS(chipType = "EPICV2")
+```
+
+You only need to run this once per chip type.
+If your annotation files are hosted elsewhere, set:
+
+```r
+options(easyEWAS.annotation_base_url = "https://your-server/path/to/annotation")
+```
 
 ## Example
 
@@ -48,6 +63,7 @@ This is an example of performing an EWAS analysis using internal sample data and
 ``` r
 library(easyEWAS)
 getwd()
+downloadAnnotEWAS(chipType = "EPICV2")
 
 # prepare the data file ------
 res <- initEWAS(outpath = "default")
