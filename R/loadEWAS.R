@@ -62,7 +62,7 @@ loadEWAS <- function(input,
 
 
       ddpcr::quiet(
-        if(substr(ExpoPath,nchar(ExpoPath)-3,nchar(ExpoPath)) == "xlsx"){
+        if(substr(MethyPath,nchar(MethyPath)-3,nchar(MethyPath)) == "xlsx"){
           readxl::read_xlsx(MethyPath) %>% as.data.frame() -> input$Data$Methy
         }else{
           vroom::vroom(MethyPath, delim = ",",show_col_types = F) %>%

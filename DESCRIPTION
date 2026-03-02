@@ -29,11 +29,11 @@ RoxygenNote: 7.3.2
 biocViews:
 Imports: 
     boot,
-    boot.pval,
     CMplot,
     ddpcr,
     doParallel,
     dplyr,
+    enrichplot,
     foreach,
     lmerTest,
     magrittr,
@@ -41,19 +41,14 @@ Imports:
     survival,
     tictoc,
     vroom,
-    writexl,
+    withr,
     clusterProfiler,
     org.Hs.eg.db,
-    ggplot2,
     DMRcate,
     sva,
     R.utils,
     BiocParallel,
     lubridate
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
 Depends: 
     R (>= 4.4.0)
 LazyData: true

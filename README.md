@@ -11,13 +11,13 @@ easyEWAS is a flexible and user-friendly R package that systematically performs 
 You can install the development version of easyEWAS like so:
   
 ``` r
-devtools::install_github("ytwangZero/easyEWAS, force = TRUE")
+devtools::install_github("ytwangZero/easyEWAS")
 ```
 
 Or you can run:
 
 ``` r
-remotes::install_github("ytwangZero/easyEWAS, force = TRUE")
+remotes::install_github("ytwangZero/easyEWAS")
 ```
 
 ### ⚠️ Important Note:
@@ -109,4 +109,3 @@ res <- dmrEWAS(input = res,
                epicv2Filter = "mean")
 
 ```
-

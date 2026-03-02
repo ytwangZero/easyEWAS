@@ -151,8 +151,7 @@ batchEWAS = function(input,
                                  par.prior=par.prior,
                                  prior.plots=FALSE,
                                  mean.only = mean.only,
-                                 ref.batch = ref.batch,
-                                 BPPARAM = BPPARAM)
+                                 ref.batch = ref.batch)
 
     }
   }
@@ -169,7 +168,6 @@ batchEWAS = function(input,
 
 
 }
-
 
 
 

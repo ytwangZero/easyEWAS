@@ -126,7 +126,7 @@ dmrEWAS = function(input,
                                design=design, coef=2, fdr = fdrCPG,
                                epicv2Remap = TRUE, epicv2Filter = epicv2Filter))
 
-  ddpcr::quiet(dmrcoutput <- dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff))
+  ddpcr::quiet(dmrcoutput <- dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff, min.cpgs=min.cpgs))
   ddpcr::quiet(results.ranges <- extractRanges(dmrcoutput, genome = genome))
   input$dmrres = as.data.frame(results.ranges)
 
