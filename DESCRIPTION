@@ -43,11 +43,12 @@ Imports:
     withr,
     clusterProfiler,
     org.Hs.eg.db,
-    DMRcate,
     sva,
     R.utils,
     BiocParallel,
     lubridate
+Suggests:
+    DMRcate
 Depends: 
     R (>= 4.4.0)
 LazyData: true

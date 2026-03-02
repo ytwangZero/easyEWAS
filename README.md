@@ -112,6 +112,8 @@ res <- enrichEWAS(input = res,
                   showCategory = 10)
                   
 # DMR analysis -----
+# install DMRcate first if needed:
+# BiocManager::install("DMRcate")
 res <- dmrEWAS(input = res,
                chipType = "EPICV2",
                what = "Beta",

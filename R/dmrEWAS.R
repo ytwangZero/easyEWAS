@@ -45,7 +45,6 @@
 #' @importFrom ddpcr quiet
 #' @importFrom vroom vroom_write
 #' @importFrom tictoc tic toc
-#' @importFrom DMRcate cpg.annotate dmrcate extractRanges
 #' @importFrom lubridate now
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
@@ -70,6 +69,12 @@ dmrEWAS = function(input,
                    min.cpgs = 2,
                    filename = "default"
                    ){
+  if (!requireNamespace("DMRcate", quietly = TRUE)) {
+    stop(
+      "Package 'DMRcate' is required for dmrEWAS(). Please install it first, e.g.:\n",
+      "BiocManager::install('DMRcate')"
+    )
+  }
 
   if (!chipType %in% c("EPICV2", "EPICV1", "450K")) {
     stop("Invalid 'chipType'. Must be one of: 'EPICV2', 'EPICV1', or '450K'.")
@@ -118,13 +123,13 @@ dmrEWAS = function(input,
     message("EPICv2 detected. Filtering position replicates using method: '", epicv2Filter, "'...")
   }
 
-  ddpcr::quiet(myannotation <- cpg.annotate("array", dfcpg, arraytype = arraytype, what = what,
+  ddpcr::quiet(myannotation <- DMRcate::cpg.annotate("array", dfcpg, arraytype = arraytype, what = what,
                                analysis.type="differential",
                                design=design, coef=2, fdr = fdrCPG,
                                epicv2Remap = TRUE, epicv2Filter = epicv2Filter))
 
-  ddpcr::quiet(dmrcoutput <- dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff, min.cpgs=min.cpgs))
-  ddpcr::quiet(results.ranges <- extractRanges(dmrcoutput, genome = genome))
+  ddpcr::quiet(dmrcoutput <- DMRcate::dmrcate(myannotation, lambda=lambda, C=C, pcutoff=pcutoff, min.cpgs=min.cpgs))
+  ddpcr::quiet(results.ranges <- DMRcate::extractRanges(dmrcoutput, genome = genome))
   input$dmrres = as.data.frame(results.ranges)
 
   message(length(myannotation@ranges), " CpGs used for DMR analysis.")
