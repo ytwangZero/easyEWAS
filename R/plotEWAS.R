@@ -4,74 +4,6 @@
 #' Manhattan plot. Additionally, the meaning of each parameter in this function is exactly the same as
 #' in \code{\link[CMplot]{CMplot}} For more detailed information or to create multi-layer circular Manhattan
 #' plots, please refer to \code{\link[CMplot]{CMplot}} (https://cran.r-project.org/web/packages/CMplot/index.html).
-#' @usage
-#' plotEWAS(input,
-#'          p = "PVAL",
-#'          threshold = NULL,
-#'          file = c("jpg", "pdf", "tiff", "png"),
-#'          col = c("#4197d8", "#f8c120", "#413496", "#495226", "#d60b6f",
-#'                  "#e66519", "#d581b7", "#83d3ad", "#7c162c", "#26755d"),
-#'          bin.size = 1e6,
-#'          bin.breaks = NULL,
-#'          LOG10 = TRUE,
-#'          pch = 19,
-#'          type = "p",
-#'          band = 1,
-#'          ylim = NULL,
-#'          axis.cex = 1,
-#'          axis.lwd = 1.5,
-#'          lab.cex = 1.5,
-#'          lab.font = 2,
-#'          plot.type = c("m", "c", "q", "d"),
-#'          points.alpha = 100L,
-#'          r = 0.3,
-#'          cex = c(0.5, 1, 1),
-#'          outward = FALSE,
-#'          ylab = expression(-log[10](italic(p))),
-#'          ylab.pos = 3,
-#'          xticks.pos = 1,
-#'          mar = c(3, 6, 3, 3),
-#'          threshold.col = "red",
-#'          threshold.lwd = 1,
-#'          threshold.lty = 2,
-#'          amplify = FALSE,
-#'          signal.cex = 1.5,
-#'          signal.pch = 19,
-#'          signal.col = NULL,
-#'          signal.line = 2,
-#'          highlight = NULL,
-#'          highlight.cex = 1,
-#'          highlight.pch = 19,
-#'          highlight.type = "p",
-#'          highlight.col = "red",
-#'          highlight.text = NULL,
-#'          highlight.text.col = "black",
-#'          highlight.text.cex = 1,
-#'          highlight.text.font = 3,
-#'          chr.labels = NULL,
-#'          chr.border = FALSE,
-#'          chr.labels.angle = 0,
-#'          chr.den.col = "black",
-#'          chr.pos.max = FALSE,
-#'          cir.chr = TRUE,
-#'          cir.chr.h = 1.5,
-#'          cir.axis = TRUE,
-#'          cir.axis.col = "black",
-#'          cir.axis.grid = TRUE,
-#'          conf.int = TRUE,
-#'          conf.int.col = NULL,
-#'          file.output = TRUE,
-#'          file.name = "",
-#'          dpi = 300,
-#'          height = NULL,
-#'          width = NULL,
-#'          main = "",
-#'          main.cex = 1.5,
-#'          main.font = 2,
-#'          legend.cex = 1,
-#'          legend.pos = c("left", "middle", "right"),
-#'          box = FALSE,
-#'          verbose = FALSE)
 #'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS function.
 #' @param p The user needs to specify the name of the p value selected for the result
@@ -82,11 +14,12 @@
 #' @param col A vector specifies the colors for the chromosomes. If the length of col is shorter than
 #' the number of chromosomes, the colors will be applied cyclically.
 #' @param LOG10 logical, whether to change the p-value into log10(p-value) scale.
-#' @param pch a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.
+#' @param pch a integer, the shape for the points, is the same with "pch" in \code{\link[graphics:plot]{plot}}.
 #' @param points.alpha Integer. Transparency (alpha) value for points (0–255). Default is 100.
 #' @param type a character, could be "p" (point), "l" (cross line), "h" (vertical lines) and so on,
-#' is the same with "type" in \code{\link[plot]{plot}}.
+#' is the same with "type" in \code{\link[graphics:plot]{plot}}.
 #' @param band a number, the size of space between chromosomes, the default is 1.
+#' @param H A number controlling the height of the circular Manhattan track.
 #' @param axis.cex a number, controls the size of ticks labels of X/Y-axis and the ticks labels of axis
 #' for circle plot.
 #' @param axis.lwd a number, controls the thickness of X/Y-axis lines and the thickness of axis for circle plot.
@@ -96,8 +29,11 @@
 #' CpG density will be plotted; if plot.type="c", only circle-Manhattan plot will be plotted; if
 #' plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
 #' if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.
+#' @param multracks Logical. Whether to use multi-track mode in CMplot.
+#' @param multracks.xaxis Logical. Whether to draw x-axis in multi-track mode.
+#' @param multraits Logical. Whether to use multi-trait mode in CMplot.
 #' @param r a number, the radius for the circle (the inside radius), the default is 1.
-#' @param cex a number or a vector, the size for the points, is the same with "size" in \code{\link[plot]{plot}}, and if
+#' @param cex a number or a vector, the size for the points, is the same with "size" in \code{\link[graphics:plot]{plot}}, and if
 #' it is a vector, the first number controls the size of points in circle plot(the default is 0.5), the
 #' second number controls the size of points in Manhattan plot (the default is 1), the third number controls
 #' the size of points in Q-Q plot (the default is 1)
@@ -141,6 +77,8 @@
 #' @param main character of vector, the title of the plot for manhattan plot and qqplot.
 #' @param main.cex size of title.
 #' @param main.font font of title.
+#' @param legend.cex A numeric value controlling legend text size.
+#' @param legend.pos A character value specifying legend position.
 #' @param box logical, this function draws a box around the current plot.
 #' @param verbose whether to print the log information.
 #' @param bin.size a integer, the size of bin in bp for marker density plot.
@@ -151,6 +89,7 @@
 #' @param outward logical, if TRUE, all points will be plotted from inside to outside for circular Manhattan plot.
 #' @param mar the size of white gaps around the plot, 4 values should be provided, indicating the direction
 #' of bottom, left, up, and right.
+#' @param mar.between Space between tracks for multi-track plotting.
 #' @param chr.den.col a character or vector or NULL, the colour for the CpG density. If the length of parameter
 #' 'chr.den.col' is bigger than 1, CpG density that counts the number of CpG within given size ('bin.size')
 #' will be plotted around the circle. If chr.den.col=NULL, the density bar will not be attached on the bottom
@@ -159,8 +98,10 @@
 #' of the chromosome.
 #' @param cir.chr logical, a boundary that represents chromosomes will be plotted on the periphery of a circle,
 #' the default is TRUE.
+#' @param cir.band A number controlling the spacing between circular tracks.
 #' @param cir.chr.h a number, the width for the boundary, if cir.chr=FALSE, then this parameter will be useless.
 #' @param file.output a logical, users can choose whether to output the plot results.
+#' @param legend.ncol Number of columns used in the legend.
 #'
 #' @return The updated input object, including CMplot-ready data stored in input$CMplot.
 #' @export

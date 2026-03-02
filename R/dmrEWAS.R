@@ -1,9 +1,6 @@
 #' @title Perform Differentially Methylated Region analysis
 #' @description Perform differential methylation analysis based on the R package \pkg{DMRcate}.
 #' Computes a kernel estimate against a null comparison to identify significantly DMRs.
-#' @usage dmrEWAS(input, chipType = "EPICV2", what = "Beta", expo = NULL, cov = NULL, genome = "hg38",
-#' lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2,
-#' epicv2Filter = "mean")
 #'
 #' @param input An R6 class integrated with all the information.
 #' @param chipType The Illumina chip versions for user measurement of methylation data,

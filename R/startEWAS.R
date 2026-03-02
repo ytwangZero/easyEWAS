@@ -1,12 +1,6 @@
 #' @title  Perform EWAS Analysis
 #' @description Perform EWAS analysis to obtain the coefficient value, standard
 #' deviation and significance p value (or adjust p value) of each site.
-#' @usage startEWAS(input, filename ="default", model = "lm", expo = "default",
-#' cov = NULL,random = NULL, time = NULL, status = NULL, chipType = "EPICV2",
-#' adjustP = TRUE, core = "default", annotation_cache = NULL,
-#' auto_download_annotation = FALSE, annotation_base_url = getOption(
-#' "easyEWAS.annotation_base_url",
-#' "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation"))
 #'
 #' @param input An R6 class integrated with all the information obtained from the loadEWAS or
 #' transEWAS function.

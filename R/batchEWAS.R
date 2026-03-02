@@ -2,8 +2,6 @@
 #' @description Perform batch effect correction based on the function \code{\link[sva]{ComBat}}
 #' form R package \pkg{sva}. It requires that the "batches" in the data set are known. It uses
 #' either parametric or non-parametric empirical Bayes frameworks for adjusting data for batch effects.
-#' @usage batchEWAS(input,adjustVar = NULL,batch = NULL, plot = FALSE, par.prior = TRUE,
-#' mean.only = FALSE,ref.batch = NULL)
 #'
 #' @param input An R6 class integrated with all the information.
 #' @param batch Name of the batch variable.
@@ -168,6 +166,5 @@ batchEWAS = function(input,
 
 
 }
-
 
 

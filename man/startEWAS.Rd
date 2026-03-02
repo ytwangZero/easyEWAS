@@ -4,12 +4,23 @@
 \alias{startEWAS}
 \title{Perform EWAS Analysis}
 \usage{
-startEWAS(input, filename ="default", model = "lm", expo = "default",
-cov = NULL,random = NULL, time = NULL, status = NULL, chipType = "EPICV2",
-adjustP = TRUE, core = "default", annotation_cache = NULL,
-auto_download_annotation = FALSE, annotation_base_url = getOption(
-"easyEWAS.annotation_base_url",
-"https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation"))
+startEWAS(
+  input,
+  filename = "default",
+  model = "lm",
+  expo = NULL,
+  cov = NULL,
+  random = NULL,
+  time = NULL,
+  status = NULL,
+  adjustP = TRUE,
+  chipType = "EPICV2",
+  core = "default",
+  annotation_cache = NULL,
+  auto_download_annotation = FALSE,
+  annotation_base_url = getOption("easyEWAS.annotation_base_url",
+    "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation")
+)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the loadEWAS or

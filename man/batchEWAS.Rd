@@ -4,8 +4,17 @@
 \alias{batchEWAS}
 \title{Perform batch effect correction}
 \usage{
-batchEWAS(input,adjustVar = NULL,batch = NULL, plot = FALSE, par.prior = TRUE,
-mean.only = FALSE,ref.batch = NULL)
+batchEWAS(
+  input,
+  adjustVar = NULL,
+  batch = NULL,
+  plot = FALSE,
+  par.prior = TRUE,
+  mean.only = FALSE,
+  ref.batch = NULL,
+  parallel = FALSE,
+  core = NULL
+)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information.}

@@ -4,73 +4,82 @@
 \alias{plotEWAS}
 \title{Visualize the results of EWAS analysis}
 \usage{
-plotEWAS(input,
-         p = "PVAL",
-         threshold = NULL,
-         file = c("jpg", "pdf", "tiff", "png"),
-         col = c("#4197d8", "#f8c120", "#413496", "#495226", "#d60b6f",
-                 "#e66519", "#d581b7", "#83d3ad", "#7c162c", "#26755d"),
-         bin.size = 1e6,
-         bin.breaks = NULL,
-         LOG10 = TRUE,
-         pch = 19,
-         type = "p",
-         band = 1,
-         ylim = NULL,
-         axis.cex = 1,
-         axis.lwd = 1.5,
-         lab.cex = 1.5,
-         lab.font = 2,
-         plot.type = c("m", "c", "q", "d"),
-         points.alpha = 100L,
-         r = 0.3,
-         cex = c(0.5, 1, 1),
-         outward = FALSE,
-         ylab = expression(-log[10](italic(p))),
-         ylab.pos = 3,
-         xticks.pos = 1,
-         mar = c(3, 6, 3, 3),
-         threshold.col = "red",
-         threshold.lwd = 1,
-         threshold.lty = 2,
-         amplify = FALSE,
-         signal.cex = 1.5,
-         signal.pch = 19,
-         signal.col = NULL,
-         signal.line = 2,
-         highlight = NULL,
-         highlight.cex = 1,
-         highlight.pch = 19,
-         highlight.type = "p",
-         highlight.col = "red",
-         highlight.text = NULL,
-         highlight.text.col = "black",
-         highlight.text.cex = 1,
-         highlight.text.font = 3,
-         chr.labels = NULL,
-         chr.border = FALSE,
-         chr.labels.angle = 0,
-         chr.den.col = "black",
-         chr.pos.max = FALSE,
-         cir.chr = TRUE,
-         cir.chr.h = 1.5,
-         cir.axis = TRUE,
-         cir.axis.col = "black",
-         cir.axis.grid = TRUE,
-         conf.int = TRUE,
-         conf.int.col = NULL,
-         file.output = TRUE,
-         file.name = "",
-         dpi = 300,
-         height = NULL,
-         width = NULL,
-         main = "",
-         main.cex = 1.5,
-         main.font = 2,
-         legend.cex = 1,
-         legend.pos = c("left", "middle", "right"),
-         box = FALSE,
-         verbose = FALSE)
+plotEWAS(
+  input,
+  p = "PVAL",
+  threshold = NULL,
+  file = c("jpg", "pdf", "tiff", "png"),
+  col = c("#4197d8", "#f8c120", "#413496", "#495226", "#d60b6f", "#e66519", "#d581b7",
+    "#83d3ad", "#7c162c", "#26755d"),
+  bin.size = 1e+06,
+  bin.breaks = NULL,
+  LOG10 = TRUE,
+  pch = 19,
+  type = "p",
+  band = 1,
+  H = 1.5,
+  ylim = NULL,
+  axis.cex = 1,
+  axis.lwd = 1.5,
+  lab.cex = 1.5,
+  lab.font = 2,
+  plot.type = c("m", "c", "q", "d"),
+  multracks = FALSE,
+  multracks.xaxis = FALSE,
+  multraits = FALSE,
+  points.alpha = 100L,
+  r = 0.3,
+  cex = c(0.5, 1, 1),
+  outward = FALSE,
+  ylab = expression(-log[10](italic(p))),
+  ylab.pos = 3,
+  xticks.pos = 1,
+  mar = c(3, 6, 3, 3),
+  mar.between = 0,
+  threshold.col = "red",
+  threshold.lwd = 1,
+  threshold.lty = 2,
+  amplify = FALSE,
+  signal.cex = 1.5,
+  signal.pch = 19,
+  signal.col = NULL,
+  signal.line = 2,
+  highlight = NULL,
+  highlight.cex = 1,
+  highlight.pch = 19,
+  highlight.type = "p",
+  highlight.col = "red",
+  highlight.text = NULL,
+  highlight.text.col = "black",
+  highlight.text.cex = 1,
+  highlight.text.font = 3,
+  chr.labels = NULL,
+  chr.border = FALSE,
+  chr.labels.angle = 0,
+  chr.den.col = "black",
+  chr.pos.max = FALSE,
+  cir.band = 1,
+  cir.chr = TRUE,
+  cir.chr.h = 1.5,
+  cir.axis = TRUE,
+  cir.axis.col = "black",
+  cir.axis.grid = TRUE,
+  conf.int = TRUE,
+  conf.int.col = NULL,
+  file.output = TRUE,
+  file.name = "",
+  dpi = 300,
+  height = NULL,
+  width = NULL,
+  main = "",
+  main.cex = 1.5,
+  main.font = 2,
+  legend.ncol = NULL,
+  legend.cex = 1,
+  legend.pos = c("left", "middle", "right"),
+  box = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS function.}
@@ -94,12 +103,14 @@ with the min or max value.}
 
 \item{LOG10}{logical, whether to change the p-value into log10(p-value) scale.}
 
-\item{pch}{a integer, the shape for the points, is the same with "pch" in \code{\link[plot]{plot}}.}
+\item{pch}{a integer, the shape for the points, is the same with "pch" in \code{\link[graphics:plot]{plot}}.}
 
 \item{type}{a character, could be "p" (point), "l" (cross line), "h" (vertical lines) and so on,
-is the same with "type" in \code{\link[plot]{plot}}.}
+is the same with "type" in \code{\link[graphics:plot]{plot}}.}
 
 \item{band}{a number, the size of space between chromosomes, the default is 1.}
+
+\item{H}{A number controlling the height of the circular Manhattan track.}
 
 \item{ylim}{vector (c(min, max)), CMplot will only plot the points among this interval.}
 
@@ -117,11 +128,17 @@ CpG density will be plotted; if plot.type="c", only circle-Manhattan plot will b
 plot.type="m",only Manhattan plot will be plotted; if plot.type="q",only Q-Q plot will be plotted;
 if plot.type=c("m","q"), Both Manhattan and Q-Q plots will be plotted.}
 
+\item{multracks}{Logical. Whether to use multi-track mode in CMplot.}
+
+\item{multracks.xaxis}{Logical. Whether to draw x-axis in multi-track mode.}
+
+\item{multraits}{Logical. Whether to use multi-trait mode in CMplot.}
+
 \item{points.alpha}{Integer. Transparency (alpha) value for points (0–255). Default is 100.}
 
 \item{r}{a number, the radius for the circle (the inside radius), the default is 1.}
 
-\item{cex}{a number or a vector, the size for the points, is the same with "size" in \code{\link[plot]{plot}}, and if
+\item{cex}{a number or a vector, the size for the points, is the same with "size" in \code{\link[graphics:plot]{plot}}, and if
 it is a vector, the first number controls the size of points in circle plot(the default is 0.5), the
 second number controls the size of points in Manhattan plot (the default is 1), the third number controls
 the size of points in Q-Q plot (the default is 1)}
@@ -136,6 +153,8 @@ the size of points in Q-Q plot (the default is 1)}
 
 \item{mar}{the size of white gaps around the plot, 4 values should be provided, indicating the direction
 of bottom, left, up, and right.}
+
+\item{mar.between}{Space between tracks for multi-track plotting.}
 
 \item{threshold.col}{a character or vector, the color for the line of threshold levels, it can also
 control the color of the diagonal line of QQplot.}
@@ -190,6 +209,8 @@ of manhattan plot.}
 \item{chr.pos.max}{logical, whether the physical positions of each chromosome contain the maximum length
 of the chromosome.}
 
+\item{cir.band}{A number controlling the spacing between circular tracks.}
+
 \item{cir.chr}{logical, a boundary that represents chromosomes will be plotted on the periphery of a circle,
 the default is TRUE.}
 
@@ -220,6 +241,12 @@ the default is TRUE.}
 \item{main.cex}{size of title.}
 
 \item{main.font}{font of title.}
+
+\item{legend.ncol}{Number of columns used in the legend.}
+
+\item{legend.cex}{A numeric value controlling legend text size.}
+
+\item{legend.pos}{A character value specifying legend position.}
 
 \item{box}{logical, this function draws a box around the current plot.}
 

@@ -4,9 +4,21 @@
 \alias{dmrEWAS}
 \title{Perform Differentially Methylated Region analysis}
 \usage{
-dmrEWAS(input, chipType = "EPICV2", what = "Beta", expo = NULL, cov = NULL, genome = "hg38",
-lambda=1000, C = 2, filename = "default",fdrCPG = 0.05, pcutoff = "fdr", min.cpgs = 2,
-epicv2Filter = "mean")
+dmrEWAS(
+  input,
+  chipType = "EPICV2",
+  what = "Beta",
+  epicv2Filter = "mean",
+  expo = NULL,
+  cov = NULL,
+  genome = "hg38",
+  fdrCPG = 0.05,
+  pcutoff = "fdr",
+  lambda = 1000,
+  C = 2,
+  min.cpgs = 2,
+  filename = "default"
+)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information.}
