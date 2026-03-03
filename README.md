@@ -1,129 +1,48 @@
-
 # easyEWAS
 
-<!-- badges: start -->
-  <!-- badges: end -->
-  
-easyEWAS is a flexible and user-friendly R package that systematically performs EWAS analyses under various study designs, along with downstream analyses and result visualization. It can be easily integrated into various DNA methylation microarray detected by Illumina HumanMethylation Bead Chip (27K, 450K, EPICV1, EPICV2, and MSA), significantly enhancing the accessibility of EWAS analysis.
+<div class="home-hero">
+  <p class="hero-kicker">Epigenome-Wide Association Study in R</p>
+  <p class="hero-lead">easyEWAS is an R package for conducting Epigenome-Wide Association Study (EWAS) in a unified and reproducible way. It supports Illumina methylation array platforms including 27K, 450K, EPIC v1, EPIC v2, and MSA, and provides an end-to-end analysis workflow covering association modeling, batch-effect handling, result visualization, bootstrap-based internal validation, enrichment analysis, and optional DMR discovery.</p>
+</div>
 
 ## Installation
 
-You can install the development version of easyEWAS like so:
-  
-``` r
-devtools::install_github("ytwangZero/easyEWAS")
-```
+Install from GitHub:
 
-Or you can run:
-
-``` r
+```r
 remotes::install_github("ytwangZero/easyEWAS")
 ```
 
-### ⚠️ Important Note:
-
-If you are not familiar with installing R packages for bioinformatics, or if the package installation fails, the problem is often caused by missing dependencies. Some Bioconductor packages required by `easyEWAS` are not installed automatically through standard installation methods. 
-
-To avoid these issues, we strongly recommend installing easyEWAS using the installation script provided below. This script will perform the following steps:
-
-- Check your R version
-- Configure the appropriate Bioconductor version
-- Install all necessary CRAN and Bioconductor packages
-- Install the easyEWAS package from GitHub
-
-📥 Download the script from the following link:  
-🔗 [Install_easyEWAS.R](https://github.com/ytwangZero/easyEWAS_materials/blob/main/Install_easyEWAS.R)
-
-📌 Save the file to your R working directory, then run:
+Load package:
 
 ```r
-source("Install_easyEWAS.R")
-``` 
-
-### Download annotation files (required for chip annotation in `startEWAS`)
-
-To keep the package lightweight, chip annotation tables are downloaded on demand
-and cached locally.
-
-```r
-downloadAnnotEWAS(chipType = "EPICV2")
-```
-
-You only need to run this once per chip type.
-If your annotation files are hosted elsewhere, set:
-
-```r
-options(easyEWAS.annotation_base_url = "https://your-server/path/to/annotation")
-```
-
-## Example
-
-This is an example of performing an EWAS analysis using internal sample data and methylation data with easyEWAS.
-  
-``` r
 library(easyEWAS)
-getwd()
-downloadAnnotEWAS(chipType = "EPICV2")
-
-# prepare the data file ------
-res <- initEWAS(outpath = "default")
-res <- loadEWAS(input = res,
-                ExpoData = sampledata,
-                MethyData = methydata)
-res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-
-# remove batch effect -----
-res <- batchEWAS(res,
-                 adjustVar = "cov1,cov2",
-                 batch = "batch",
-                 plot = TRUE,
-                 par.prior = TRUE,
-                 mean.only = FALSE,
-                 ref.batch = NULL)
-                 
-# perform the EWAS analysis ------
-res <- startEWAS(input = res,
-                model = "lm",
-                expo = "var",
-                cov = "cov1,cov2",
-                core = "default")
-
-# visualize the EWAS result ------
-res <- plotEWAS(input = res,
-                file = "jpg",
-                p = "PVAL",
-                threshold = 0.05)
-
-# internal validation based on the bootstrap method ------
-res <- bootEWAS(input = res,
-                filterP = "PVAL",
-                cutoff = 0.001,
-                bootCI = "perc",
-                times = 100)
-
-# conduct enrichment analysis ------
-res <- enrichEWAS(input = res,
-                  method = "GO",
-                  filterP = "PVAL",
-                  cutoff = 0.05,
-                  plot = TRUE,
-                  plotType = "dot",
-                  plotcolor = "pvalue",
-                  showCategory = 10)
-                  
-# DMR analysis -----
-# install DMRcate first if needed:
-# BiocManager::install("DMRcate")
-res <- dmrEWAS(input = res,
-               chipType = "EPICV2",
-               what = "Beta",
-               expo = "var",
-               cov = "cov1,cov2",
-               genome = "hg38",
-               lambda=1000,
-               C = 2,
-               filename = "default",
-               pcutoff = 0.05,
-               epicv2Filter = "mean")
-
 ```
+
+### Optional dependency for DMR analysis
+
+`dmrEWAS()` depends on `DMRcate`, which is in `Suggests` and is not installed automatically in minimal setups.
+
+```r
+BiocManager::install("DMRcate")
+```
+
+## Update: Annotation Data Loading
+
+Large chip annotation tables are now downloaded on demand and cached locally, instead of being bundled inside the main package tarball. This makes installation lighter, faster, and more stable for GitHub users.
+
+Download annotation (one-time per chip type):
+
+```r
+downloadAnnotEWAS(chipType = "EPICV2")
+```
+
+If needed, set a custom annotation host:
+
+```r
+options(easyEWAS.annotation_base_url = "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation")
+```
+
+## Citation
+
+Wang Y, Jiang M, Niu S, Gao X. easyEWAS: a flexible and user-friendly R package for epigenome-wide association study[J]. Bioinformatics Advances, 2025, 5(1): vbaf026.
