@@ -62,11 +62,6 @@ Download annotation (one-time per chip type):
 downloadAnnotEWAS(chipType = "EPICV2")
 ```
 
-If needed, set a custom annotation host:
-
-```r
-options(easyEWAS.annotation_base_url = "https://github.com/ytwangZero/easyEWAS_materials/raw/main/annotation")
-```
 
 ## Citation
 
