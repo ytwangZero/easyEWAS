@@ -28,8 +28,6 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @importFrom sva ComBat
-#' @importFrom BiocParallel bpparam SnowParam MulticoreParam
 #' @examples \dontrun{
 #' res <- initEWAS(outpath = "default")
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
@@ -48,6 +46,20 @@ batchEWAS = function(input,
                    ){
 
   tictoc::tic()
+
+  if (!requireNamespace("sva", quietly = TRUE)) {
+    stop(
+      "Package 'sva' is required for batchEWAS(). Please install it first, e.g.:\n",
+      "BiocManager::install('sva')"
+    )
+  }
+  if (parallel && !requireNamespace("BiocParallel", quietly = TRUE)) {
+    stop(
+      "Package 'BiocParallel' is required when parallel = TRUE in batchEWAS().\n",
+      "Please install it first, e.g.:\n",
+      "BiocManager::install('BiocParallel')"
+    )
+  }
 
 
   if (is.null(batch) || !(batch %in% colnames(input$Data$Expo))) {
@@ -166,5 +178,4 @@ batchEWAS = function(input,
 
 
 }
-
 

@@ -1,6 +1,6 @@
 Package: easyEWAS
 Title: Perform and Visualize EWAS Analysis
-Version: 1.1.0
+Version: 1.1.1
 Authors@R: 
     c(
     person(
@@ -44,12 +44,12 @@ Imports:
     vroom,
     withr,
     clusterProfiler,
-    sva,
     R.utils,
-    BiocParallel,
     lubridate
 Suggests:
     DMRcate,
+    sva,
+    BiocParallel,
     org.Hs.eg.db,
     knitr,
     rmarkdown
