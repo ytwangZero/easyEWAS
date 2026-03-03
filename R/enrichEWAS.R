@@ -41,7 +41,6 @@
 #' @importFrom tictoc tic toc
 #' @importFrom enrichplot dotplot
 #' @importFrom clusterProfiler bitr enrichGO enrichKEGG
-#' @import org.Hs.eg.db
 #' @importFrom vroom vroom_write
 #' @importFrom R.utils setOption
 #' @examples \dontrun{
@@ -86,6 +85,13 @@ enrichEWAS <- function(input,
   if (!method %in% c("GO", "KEGG")) {
     stop("Invalid method. Must be one of: 'GO', 'KEGG'")
   }
+  if (!requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+    stop(
+      "Package 'org.Hs.eg.db' is required for enrichEWAS(). ",
+      "Please install it first, e.g. BiocManager::install('org.Hs.eg.db')."
+    )
+  }
+  orgdb <- get("org.Hs.eg.db", envir = asNamespace("org.Hs.eg.db"))
 
 
   subset(input$result, input$result[filterP] < cutoff, select = gene) %>%
@@ -103,7 +109,7 @@ enrichEWAS <- function(input,
     gene.df <- bitr(enrichdata$genename,
                     fromType = "SYMBOL",
                     toType = c("ENTREZID"),
-                    OrgDb = org.Hs.eg.db)
+                    OrgDb = orgdb)
   )
   if (nrow(gene.df) == 0) {
     stop("No gene symbols could be mapped to Entrez IDs. Please check input gene names.")
@@ -115,7 +121,7 @@ enrichEWAS <- function(input,
   if(method == "GO"){
 
     enres <- enrichGO(gene = gene,
-                      OrgDb = org.Hs.eg.db,
+                      OrgDb = orgdb,
                       ont=ont,
                       pvalueCutoff = pvalueCutoff,
                       pAdjustMethod = pAdjustMethod,

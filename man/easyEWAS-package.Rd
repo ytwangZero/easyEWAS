@@ -8,6 +8,15 @@
 \description{
 Tools for conducting Epigenome-Wide Association Study (EWAS) and visualizing results. Users provide sample metadata and methylation matrices to run EWAS with linear models, linear mixed-effects models, or Cox models. The package supports downstream visualization, bootstrap validation, enrichment analysis, and DMR analysis with optional parallel computing.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/ytwangZero/easyEWAS}
+  \item \url{https://ytwangZero.github.io/easyEWAS/}
+  \item Report bugs at \url{https://github.com/ytwangZero/easyEWAS/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Yuting Wang \email{ytwang@pku.edu.cn}
 
