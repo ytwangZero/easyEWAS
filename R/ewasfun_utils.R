@@ -8,8 +8,7 @@
 #' @param facnum (Only for lm/lmer) Number of factor levels for exposure variable.
 #'
 #' @return A numeric vector with model coefficients, standard errors, and p-values.
-#'
-#' @export
+
 ewasfun_lm <- function(cg, ff, cov, facnum) {
   cov$cpg <- as.vector(t(cg))
   res <- tryCatch({
