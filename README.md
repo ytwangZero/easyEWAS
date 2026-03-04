@@ -1,7 +1,6 @@
 # easyEWAS
 
 <div class="home-hero">
-  <p class="hero-kicker">Epigenome-Wide Association Study in R</p>
   <p class="hero-lead">easyEWAS is an R package for conducting Epigenome-Wide Association Study (EWAS) in a unified and reproducible way. It supports Illumina methylation array platforms including 27K, 450K, EPIC v1, EPIC v2, and MSA, and provides an end-to-end analysis workflow covering association modeling, batch-effect handling, result visualization, bootstrap-based internal validation, enrichment analysis, and optional DMR discovery.</p>
 </div>
 
