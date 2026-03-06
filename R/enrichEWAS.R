@@ -39,8 +39,6 @@
 #' @export
 #' @import dplyr
 #' @importFrom tictoc tic toc
-#' @importFrom enrichplot dotplot
-#' @importFrom clusterProfiler bitr enrichGO enrichKEGG
 #' @importFrom vroom vroom_write
 #' @importFrom R.utils setOption
 #' @examples \dontrun{
@@ -85,6 +83,12 @@ enrichEWAS <- function(input,
   if (!method %in% c("GO", "KEGG")) {
     stop("Invalid method. Must be one of: 'GO', 'KEGG'")
   }
+  if (!requireNamespace("clusterProfiler", quietly = TRUE)) {
+    stop(
+      "Package 'clusterProfiler' is required for enrichEWAS(). ",
+      "Please install it first, e.g. BiocManager::install('clusterProfiler')."
+    )
+  }
   if (!requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
     stop(
       "Package 'org.Hs.eg.db' is required for enrichEWAS(). ",
@@ -106,10 +110,12 @@ enrichEWAS <- function(input,
 
   message("Converting gene symbols to Entrez IDs...")
   ddpcr::quiet(
-    gene.df <- bitr(enrichdata$genename,
-                    fromType = "SYMBOL",
-                    toType = c("ENTREZID"),
-                    OrgDb = orgdb)
+    gene.df <- clusterProfiler::bitr(
+      enrichdata$genename,
+      fromType = "SYMBOL",
+      toType = c("ENTREZID"),
+      OrgDb = orgdb
+    )
   )
   if (nrow(gene.df) == 0) {
     stop("No gene symbols could be mapped to Entrez IDs. Please check input gene names.")
@@ -120,23 +126,27 @@ enrichEWAS <- function(input,
   message("Starting ", method, " enrichment analysis using clusterProfiler ...")
   if(method == "GO"){
 
-    enres <- enrichGO(gene = gene,
-                      OrgDb = orgdb,
-                      ont=ont,
-                      pvalueCutoff = pvalueCutoff,
-                      pAdjustMethod = pAdjustMethod,
-                      qvalueCutoff = qvalueCutoff,
-                      readable = TRUE)
+    enres <- clusterProfiler::enrichGO(
+      gene = gene,
+      OrgDb = orgdb,
+      ont = ont,
+      pvalueCutoff = pvalueCutoff,
+      pAdjustMethod = pAdjustMethod,
+      qvalueCutoff = qvalueCutoff,
+      readable = TRUE
+    )
     enres@result -> input$enrichres
     input$enrichres$GeneRatio = as.character(input$enrichres$GeneRatio)
     input$enrichres$BgRatio = as.character(input$enrichres$BgRatio)
 
   }else if(method == "KEGG"){
-    enres <- enrichKEGG(gene = gene,
-                        organism = "hsa",
-                        pvalueCutoff = pvalueCutoff,
-                        pAdjustMethod = pAdjustMethod,
-                        qvalueCutoff = qvalueCutoff)
+    enres <- clusterProfiler::enrichKEGG(
+      gene = gene,
+      organism = "hsa",
+      pvalueCutoff = pvalueCutoff,
+      pAdjustMethod = pAdjustMethod,
+      qvalueCutoff = qvalueCutoff
+    )
     enres@result -> input$enrichres
   }
 
@@ -165,13 +175,20 @@ enrichEWAS <- function(input,
       file_name <- file.path(input$outpath,
                              if (filename == "default") suffix else paste0(filename, ".pdf"))
 
+      if (identical(plotType, "dot") && !requireNamespace("enrichplot", quietly = TRUE)) {
+        stop(
+          "Package 'enrichplot' is required when plotType = 'dot'. ",
+          "Please install it first, e.g. BiocManager::install('enrichplot')."
+        )
+      }
+
       # Generate the appropriate plot
       pdf(file = file_name, width = width, height = height)
       p <- switch(plotType,
-                  "dot" = dotplot(enres,
-                                  x = x,
-                                  color = plotcolor,
-                                  showCategory = showCategory),
+                  "dot" = enrichplot::dotplot(enres,
+                                              x = x,
+                                              color = plotcolor,
+                                              showCategory = showCategory),
                   "bar" = barplot(enres,
                                   x = x,
                                   color = plotcolor,

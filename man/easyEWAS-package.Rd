@@ -12,7 +12,7 @@ Tools for conducting Epigenome-Wide Association Study (EWAS) and visualizing res
 Useful links:
 \itemize{
   \item \url{https://github.com/ytwangZero/easyEWAS}
-  \item \url{https://ytwangZero.github.io/easyEWAS/}
+  \item \url{https://easyewas-tutorial.github.io/}
   \item Report bugs at \url{https://github.com/ytwangZero/easyEWAS/issues}
 }
 

@@ -21,7 +21,8 @@ Description: Tools for conducting Epigenome-Wide Association Study (EWAS)
     validation, enrichment analysis, and DMR analysis with optional parallel
     computing.
 License: GPL (>= 3)
-URL: https://github.com/ytwangZero/easyEWAS
+URL: https://github.com/ytwangZero/easyEWAS,
+    https://easyewas-tutorial.github.io/
 BugReports: https://github.com/ytwangZero/easyEWAS/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -33,7 +34,6 @@ Imports:
     ddpcr,
     doParallel,
     dplyr,
-    enrichplot,
     foreach,
     lmerTest,
     magrittr,
@@ -43,13 +43,14 @@ Imports:
     tictoc,
     vroom,
     withr,
-    clusterProfiler,
     R.utils,
     lubridate
 Suggests:
     DMRcate,
     sva,
     BiocParallel,
+    clusterProfiler,
+    enrichplot,
     org.Hs.eg.db,
     knitr,
     rmarkdown
