@@ -25,10 +25,11 @@
 #' @importFrom tictoc tic toc
 #' @importFrom ddpcr quiet
 #' @importFrom lubridate now
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
-#' }
+#' dim(res$Data$Expo)
+#' dim(res$Data$Methy)
 loadEWAS <- function(input,
                      ExpoPath = NULL,
                      MethyPath = NULL,
@@ -156,6 +157,5 @@ loadEWAS <- function(input,
 
 
 }
-
 
 

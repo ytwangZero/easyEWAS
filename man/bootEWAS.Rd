@@ -5,7 +5,7 @@
 \title{Perform Bootstrap-based Internal Validation}
 \usage{
 bootEWAS(input, filterP = "PVAL", cutoff = 0.05, CpGs = NULL, times = 500,
-bootCI = "perc",filename = "default")
+bootCI = "perc", filename = "default", seed = NULL)
 }
 \arguments{
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS or
@@ -27,6 +27,9 @@ The value should be one of "norm", "basic", "stud", "perc" (the default), and "b
 
 \item{filename}{User-customized .csv file name for storing bootstrap results. If "default", it will
 be named as "bootresult".}
+
+\item{seed}{Optional integer seed used for reproducible bootstrap resampling.
+If \code{NULL} (default), the current random-number-generator state is used.}
 }
 \value{
 input, An R6 class object integrating all information.
@@ -36,11 +39,13 @@ Users can perform internal validation of the identified differently methylated
 sites based on the bootstrap method.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
-}
+res$Data$Methy <- res$Data$Methy[seq_len(50), , drop = FALSE]
+res <- startEWAS(
+  input = res, chipType = NULL, model = "lm",
+  expo = "default", adjustP = TRUE, core = 1
+)
+res <- bootEWAS(input = res, CpGs = res$result$probe[1], times = 5, seed = 1)
 }

@@ -34,8 +34,8 @@ input, an R6 class object integrating all information.
 Upload sample data and methylation data for EWAS analysis.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
-}
+dim(res$Data$Expo)
+dim(res$Data$Methy)
 }

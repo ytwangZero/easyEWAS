@@ -79,12 +79,28 @@ Perform differential methylation analysis based on the R package \pkg{DMRcate}.
 Computes a kernel estimate against a null comparison to identify significantly DMRs.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+\donttest{
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- dmrEWAS(input = res, filename = "default", chipType = "EPICV2", what = "Beta", expo = "var",
-cov = "cov1,cov2", genome = "hg38",)
+if (interactive() &&
+    requireNamespace("DMRcate", quietly = TRUE) &&
+    requireNamespace("ExperimentHub", quietly = TRUE) &&
+    requireNamespace("AnnotationHub", quietly = TRUE)) {
+  hub_cache <- file.path(tempdir(), "bioc-hub-cache")
+  dir.create(hub_cache, recursive = TRUE, showWarnings = FALSE)
+  ExperimentHub::setExperimentHubOption("CACHE", hub_cache)
+  AnnotationHub::setAnnotationHubOption("CACHE", hub_cache)
+  res <- dmrEWAS(
+    input = res,
+    filename = "default",
+    chipType = "EPICV2",
+    what = "Beta",
+    expo = "var",
+    cov = "cov1,cov2",
+    genome = "hg38"
+  )
+}
 }
 
 }

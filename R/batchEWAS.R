@@ -28,11 +28,13 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples \donttest{
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' res <- batchEWAS(input = res, batch = "batch", par.prior=TRUE, ref.batch = NULL)
+#' if (requireNamespace("sva", quietly = TRUE)) {
+#'   res <- batchEWAS(input = res, batch = "batch", par.prior = TRUE, ref.batch = NULL)
+#' }
 #' }
 batchEWAS = function(input,
                    adjustVar = NULL,
@@ -66,6 +68,14 @@ batchEWAS = function(input,
     stop("'batch' must be a valid column name in the sample data.")
   }
   batch = input$Data$Expo[[batch]]
+  export_output <- .easyEWAS_export_enabled(input)
+  if (plot && !export_output) {
+    message("File export is disabled in initEWAS(); batchEWAS diagnostic PDF will not be generated.")
+    plot <- FALSE
+  }
+  if (export_output) {
+    out_dir <- .easyEWAS_output_dir(input)
+  }
 
   if(is.null(adjustVar)){
     mod = NULL
@@ -85,7 +95,7 @@ batchEWAS = function(input,
   message("Starting batch effect adjustment using ComBat. This may take some time...")
 
   if(plot){
-    pdf(file = file.path(input$outpath, "combat_plots.pdf"), width = 8, height = 8)
+    pdf(file = file.path(out_dir, "combat_plots.pdf"), width = 8, height = 8)
 
     if(parallel){
 
@@ -130,7 +140,7 @@ batchEWAS = function(input,
     }
 
     dev.off()
-    message("A diagnostic plot was saved to: ", file.path(input$outpath, "combat_plots.pdf"))
+    message("A diagnostic plot was saved to: ", file.path(out_dir, "combat_plots.pdf"))
   }else{
 
     if(parallel){
@@ -178,4 +188,3 @@ batchEWAS = function(input,
 
 
 }
-

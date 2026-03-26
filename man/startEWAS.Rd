@@ -58,6 +58,7 @@ Bonferroni correction methods.}
 \item "EPICV1"
 \item "EPICV2" (default)
 \item "MSA"
+\item NULL (skip annotation)
 }}
 
 \item{core}{Number of CPU cores to use for parallel processing. If set to "default", uses the number
@@ -79,12 +80,17 @@ Perform EWAS analysis to obtain the coefficient value, standard
 deviation and significance p value (or adjust p value) of each site.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-downloadAnnotEWAS(chipType = "EPICV2")
-res <- startEWAS(input = res, filename = "default", chipType = "EPICV2", model = "lm",
-expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
-}
+res$Data$Methy <- res$Data$Methy[seq_len(50), , drop = FALSE]
+res <- startEWAS(
+  input = res,
+  model = "lm",
+  expo = "var",
+  cov = "cov1,cov2",
+  chipType = NULL,
+  core = 1
+)
+head(res$result)
 }

@@ -21,7 +21,6 @@ ewasfun_lm <- function(cg, ff, cov, facnum) {
 }
 
 #' @rdname ewasfun_lm
-#' @export
 ewasfun_lmer <- function(cg, ff, cov, facnum) {
   cov$cpg <- as.vector(t(cg))
   res <- tryCatch({
@@ -34,7 +33,6 @@ ewasfun_lmer <- function(cg, ff, cov, facnum) {
 }
 
 #' @rdname ewasfun_lm
-#' @export
 ewasfun_cox <- function(cg, ff, cov) {
   cov$cpg <- as.vector(t(cg))
   res <- tryCatch({
@@ -44,4 +42,19 @@ ewasfun_cox <- function(cg, ff, cov) {
     rep(NA_real_, 4)
   })
   return(res)
+}
+
+.easyEWAS_export_enabled <- function(input) {
+  if (!is.null(input$export_output)) {
+    return(isTRUE(input$export_output))
+  }
+  TRUE
+}
+
+.easyEWAS_output_dir <- function(input) {
+  if (is.null(input$outpath) || !nzchar(input$outpath)) {
+    stop("No valid output directory found in 'input$outpath'.")
+  }
+  dir.create(input$outpath, recursive = TRUE, showWarnings = FALSE)
+  input$outpath
 }

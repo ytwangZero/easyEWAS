@@ -3,7 +3,7 @@
 #' sites based on the bootstrap method.
 #'
 #' @usage bootEWAS(input, filterP = "PVAL", cutoff = 0.05, CpGs = NULL, times = 500,
-#' bootCI = "perc",filename = "default")
+#' bootCI = "perc", filename = "default", seed = NULL)
 #'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS or
 #' plotEWAS function.
@@ -18,6 +18,8 @@
 #' be named as "bootresult".
 #' @param bootCI A vector of character strings representing the type of interval to base the test on.
 #' The value should be one of "norm", "basic", "stud", "perc" (the default), and "bca".
+#' @param seed Optional integer seed used for reproducible bootstrap resampling.
+#' If `NULL` (default), the current random-number-generator state is used.
 #'
 #' @return input, An R6 class object integrating all information.
 #' @export
@@ -27,22 +29,27 @@
 #' @importFrom boot boot boot.ci
 #' @importFrom survival coxph Surv
 #' @importFrom lmerTest lmer
+#' @importFrom withr local_seed
 #'
 #'
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-#' res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
-#' }
+#' res$Data$Methy <- res$Data$Methy[seq_len(50), , drop = FALSE]
+#' res <- startEWAS(
+#'   input = res, chipType = NULL, model = "lm",
+#'   expo = "default", adjustP = TRUE, core = 1
+#' )
+#' res <- bootEWAS(input = res, CpGs = res$result$probe[1], times = 5, seed = 1)
 bootEWAS = function(input,
                     filterP = "PVAL", # FDR, Bonfferoni
                     cutoff = 0.05,
                     CpGs = NULL,
                     times = 500,
                     bootCI = "perc",
-                    filename = "default"){
+                    filename = "default",
+                    seed = NULL){
 
   tictoc::tic()
   if (is.null(input$result)) {
@@ -53,6 +60,9 @@ bootEWAS = function(input,
   }
   if (!bootCI %in% c("norm", "perc", "basic", "stud", "bca")) {
     stop("Invalid 'bootCI' value. Must be one of 'norm', 'perc', 'basic', 'stud', 'bca'.")
+  }
+  if (!is.null(seed) && (!is.numeric(seed) || length(seed) != 1 || is.na(seed))) {
+    stop("'seed' must be NULL or a single numeric value.")
   }
 
 
@@ -84,7 +94,9 @@ bootEWAS = function(input,
     dplyr::select(2) -> original
 
 
-  set.seed(123)
+  if (!is.null(seed)) {
+    withr::local_seed(as.integer(seed))
+  }
   if (length(sig_probes) == 0) {
     stop("No CpG sites meet the filtering criteria.\nTime: ", lubridate::now())
   }else{
@@ -159,14 +171,20 @@ bootEWAS = function(input,
       )
 
 
-      if(filename == "default"){
-        vroom::vroom_write(input$bootres, paste0(input$outpath, "/bootresult.csv"), ",")
-      }else{
-        vroom::vroom_write(input$bootres, file.path(input$outpath, paste0(filename, ".csv")), ",")
+      if (.easyEWAS_export_enabled(input)) {
+        out_dir <- .easyEWAS_output_dir(input)
+        if(filename == "default"){
+          vroom::vroom_write(input$bootres, file.path(out_dir, "bootresult.csv"), ",")
+        }else{
+          vroom::vroom_write(input$bootres, file.path(out_dir, paste0(filename, ".csv")), ",")
+        }
+        out_msg <- paste0("You can find results in ", out_dir, ".\n")
+      } else {
+        out_msg <- "Result is stored in input$bootres (file export disabled).\n"
       }
 
       lubridate::now()  -> NowTime
-      message(paste0("Bootstrap for internal validation has been completed!\nYou can find results in ",input$outpath, ".\n", NowTime))
+      message(paste0("Bootstrap for internal validation has been completed!\n", out_msg, NowTime))
 
       tictoc::toc()
 
@@ -178,5 +196,3 @@ bootEWAS = function(input,
 
 
 }
-
-

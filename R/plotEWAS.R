@@ -103,7 +103,10 @@
 #' @param file.output a logical, users can choose whether to output the plot results.
 #' @param legend.ncol Number of columns used in the legend.
 #'
-#' @return The updated input object, including CMplot-ready data stored in input$CMplot.
+#' @return The updated input object, including CMplot-ready data stored in
+#' `input$CMplot` and plotting arguments stored in `input$plot_args`. When
+#' files are not exported, a replayable plot may also be stored in
+#' `input$plot_record` for the current R session.
 #' @export
 #' @import dplyr
 #' @importFrom CMplot CMplot
@@ -111,13 +114,15 @@
 #' @importFrom lubridate now
 #' @importFrom withr with_dir
 #'
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
-#' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
-#' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "var", adjustP = TRUE)
-#' res <- plotEWAS(input = res, p = "PVAL")
-#' }
+#' @examples
+#' res <- initEWAS(export = FALSE)
+#' res$result <- data.frame(
+#'   probe = paste0("cg", seq_len(50)),
+#'   chr = rep(c("1", "2"), each = 25),
+#'   pos = seq_len(50) * 1000,
+#'   PVAL = seq(0.001, 0.05, length.out = 50)
+#' )
+#' res <- plotEWAS(input = res, p = "PVAL", plot.type = "m", file.output = FALSE)
 plotEWAS <- function(input,
                      p = "PVAL",
                      threshold=NULL,
@@ -207,6 +212,14 @@ plotEWAS <- function(input,
     threshold <- 0.05
     message("No significance threshold provided. Default threshold (0.05) will be used.")
   }
+  export_output <- .easyEWAS_export_enabled(input)
+  if (file.output && !export_output) {
+    message("File export is disabled in initEWAS(); plotEWAS will not write image files.")
+    file.output <- FALSE
+  }
+  if (export_output) {
+    out_dir <- .easyEWAS_output_dir(input)
+  }
 
 
 
@@ -218,90 +231,112 @@ plotEWAS <- function(input,
                                 "11","12","13","14","15","16","17","18",
                                 "19","20","21","22","X","Y"), ordered = T)
   df[order(sx),] -> input$CMplot
+  plot_args <- list(
+    col = col,
+    bin.size = bin.size,
+    bin.breaks = bin.breaks,
+    LOG10 = LOG10,
+    pch = pch,
+    type = type,
+    band = band,
+    H = H,
+    ylim = ylim,
+    axis.cex = axis.cex,
+    axis.lwd = axis.lwd,
+    lab.cex = lab.cex,
+    lab.font = lab.font,
+    plot.type = plot.type,
+    multracks = multracks,
+    multracks.xaxis = multracks.xaxis,
+    multraits = multraits,
+    points.alpha = points.alpha,
+    r = r,
+    cex = cex,
+    outward = outward,
+    ylab = ylab,
+    ylab.pos = ylab.pos,
+    xticks.pos = xticks.pos,
+    mar = mar,
+    mar.between = mar.between,
+    threshold = threshold,
+    threshold.col = threshold.col,
+    threshold.lwd = threshold.lwd,
+    threshold.lty = threshold.lty,
+    amplify = amplify,
+    signal.cex = signal.cex,
+    signal.pch = signal.pch,
+    signal.col = signal.col,
+    signal.line = signal.line,
+    highlight = highlight,
+    highlight.cex = highlight.cex,
+    highlight.pch = highlight.pch,
+    highlight.type = highlight.type,
+    highlight.col = highlight.col,
+    highlight.text = highlight.text,
+    highlight.text.col = highlight.text.col,
+    highlight.text.cex = highlight.text.cex,
+    highlight.text.font = highlight.text.font,
+    chr.labels = chr.labels,
+    chr.border = chr.border,
+    chr.labels.angle = chr.labels.angle,
+    chr.den.col = chr.den.col,
+    chr.pos.max = chr.pos.max,
+    cir.band = cir.band,
+    cir.chr = cir.chr,
+    cir.chr.h = cir.chr.h,
+    cir.axis = cir.axis,
+    cir.axis.col = cir.axis.col,
+    cir.axis.grid = cir.axis.grid,
+    conf.int = conf.int,
+    conf.int.col = conf.int.col,
+    file.output = file.output,
+    file.name = file.name,
+    file = file,
+    dpi = dpi,
+    height = height,
+    width = width,
+    main = main,
+    main.cex = main.cex,
+    main.font = main.font,
+    legend.ncol = legend.ncol,
+    legend.cex = legend.cex,
+    legend.pos = legend.pos,
+    box = box,
+    verbose = verbose
+  )
+  input$plot_args <- plot_args
+  input$plot_record <- NULL
 
   message("Starting EWAS result visualization using CMplot...")
 
   #plot the ewas result----------
-  withr::with_dir(input$outpath, {
-    CMplot::CMplot(input$CMplot,
-                   col=col,
-                   bin.size=bin.size,
-                   bin.breaks=bin.breaks,
-                   LOG10=LOG10,
-                   pch=pch,
-                   type=type,
-                   band=band,
-                   H=H,
-                   ylim=ylim,
-                   axis.cex=axis.cex,
-                   axis.lwd=axis.lwd,
-                   lab.cex=lab.cex,
-                   lab.font=lab.font,
-                   plot.type=plot.type,
-                   multracks=multracks,
-                   multracks.xaxis=multracks.xaxis,
-                   multraits=multraits,
-                   points.alpha=points.alpha,
-                   r=r,
-                   cex=cex,
-                   outward=outward,
-                   ylab=ylab,
-                   ylab.pos=ylab.pos,
-                   xticks.pos=xticks.pos,
-                   mar=mar,
-                   mar.between=mar.between,
-                   threshold=threshold,
-                   threshold.col=threshold.col,
-                   threshold.lwd=threshold.lwd,
-                   threshold.lty=threshold.lty,
-                   amplify=amplify,
-                   signal.cex=signal.cex,
-                   signal.pch=signal.pch,
-                   signal.col=signal.col,
-                   signal.line=signal.line,
-                   highlight=highlight,
-                   highlight.cex=highlight.cex,
-                   highlight.pch=highlight.pch,
-                   highlight.type=highlight.type,
-                   highlight.col=highlight.col,
-                   highlight.text=highlight.text,
-                   highlight.text.col=highlight.text.col,
-                   highlight.text.cex=highlight.text.cex,
-                   highlight.text.font=highlight.text.font,
-                   chr.labels=chr.labels,
-                   chr.border=chr.border,
-                   chr.labels.angle=chr.labels.angle,
-                   chr.den.col=chr.den.col,
-                   chr.pos.max=chr.pos.max,
-                   cir.band=cir.band,
-                   cir.chr=cir.chr,
-                   cir.chr.h=cir.chr.h,
-                   cir.axis=cir.axis,
-                   cir.axis.col=cir.axis.col,
-                   cir.axis.grid=cir.axis.grid,
-                   conf.int=conf.int,
-                   conf.int.col=conf.int.col,
-                   file.output=file.output,
-                   file.name=file.name,
-                   file=file,
-                   dpi=dpi,
-                   height=height,
-                   width=width,
-                   main=main,
-                   main.cex=main.cex,
-                   main.font=main.font,
-                   legend.ncol=legend.ncol,
-                   legend.cex=legend.cex,
-                   legend.pos=legend.pos,
-                   box=box,
-                   verbose=verbose)
-  })
+  draw_plot <- function() {
+    do.call(CMplot::CMplot, c(list(input$CMplot), plot_args))
+  }
+  if (export_output) {
+    withr::with_dir(out_dir, draw_plot())
+  } else {
+    draw_plot()
+  }
+  if (!file.output) {
+    input$plot_record <- tryCatch(grDevices::recordPlot(), error = function(e) NULL)
+  }
 
 
   lubridate::now() -> NowTime
-  message("EWAS visualization completed successfully.\n",
-          "Plots saved to: ", input$outpath, ".\n",
-          "Timestamp: ", NowTime)
+  if (export_output && file.output) {
+    message("EWAS visualization completed successfully.\n",
+            "Plots saved to: ", out_dir, ".\n",
+            "Timestamp: ", NowTime)
+  } else if (export_output && !file.output) {
+    message("EWAS visualization completed successfully.\n",
+            "No files were written because file.output = FALSE.\n",
+            "Timestamp: ", NowTime)
+  } else {
+    message("EWAS visualization completed successfully.\n",
+            "No files were written (file export disabled in initEWAS()). Plot settings are stored in input$plot_args.\n",
+            "Timestamp: ", NowTime)
+  }
 
   tictoc::toc()
 

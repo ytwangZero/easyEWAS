@@ -52,10 +52,12 @@ form R package \pkg{sva}. It requires that the "batches" in the data set are kno
 either parametric or non-parametric empirical Bayes frameworks for adjusting data for batch effects.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+\donttest{
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- batchEWAS(input = res, batch = "batch", par.prior=TRUE, ref.batch = NULL)
+if (requireNamespace("sva", quietly = TRUE)) {
+  res <- batchEWAS(input = res, batch = "batch", par.prior = TRUE, ref.batch = NULL)
+}
 }
 }

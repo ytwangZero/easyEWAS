@@ -25,6 +25,7 @@
 #'   - "EPICV1"
 #'   - "EPICV2" (default)
 #'   - "MSA"
+#'   - NULL (skip annotation)
 #' @param core Number of CPU cores to use for parallel processing. If set to "default", uses the number
 #' of available physical cores minus one.
 #' @param annotation_cache Local directory for cached annotation files. If NULL, uses
@@ -45,14 +46,20 @@
 #' @importFrom survival coxph Surv
 #' @importFrom lmerTest lmer
 #' @importFrom stats lm
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' downloadAnnotEWAS(chipType = "EPICV2")
-#' res <- startEWAS(input = res, filename = "default", chipType = "EPICV2", model = "lm",
-#' expo = "var", cov = "cov1,cov2",adjustP = TRUE, core = "default")
-#' }
+#' res$Data$Methy <- res$Data$Methy[seq_len(50), , drop = FALSE]
+#' res <- startEWAS(
+#'   input = res,
+#'   model = "lm",
+#'   expo = "var",
+#'   cov = "cov1,cov2",
+#'   chipType = NULL,
+#'   core = 1
+#' )
+#' head(res$result)
 startEWAS = function(input,
                      filename ="default",
                      model = "lm",
@@ -87,9 +94,12 @@ startEWAS = function(input,
   # Set number of cores for parallel processing
   # -------------------------------------------
   if(core == "default"){
-    no_cores = detectCores(logical=F) - 1
+    no_cores = max(1, detectCores(logical=FALSE) - 1)
   }else{
-    no_cores = core
+    if (!is.numeric(core) || length(core) != 1 || is.na(core) || core < 1) {
+      stop("'core' must be 'default' or a positive integer.")
+    }
+    no_cores = as.integer(core)
   }
 
   # -----------------------------
@@ -167,9 +177,9 @@ startEWAS = function(input,
   message("EWAS data preprocessing completed in ", round(preprocess_end_time - preprocess_start_time, 2), " seconds.\n")
 
   # -----------------------------
-  # Set up parallel computation
+  # Set up computation
   # -----------------------------
-  message("Starting parallel computation setup ...")
+  message("Starting computation setup ...")
   len = nrow(input$Data$Methy)
   chunk.size <- ceiling(len/no_cores)
   result_cols <- switch(model,
@@ -177,58 +187,74 @@ startEWAS = function(input,
                         "lmer" = 3 * (facnum - 1),
                         "cox" = 4)
 
-  setup_time <- system.time({
+  if (no_cores > 1) {
+    setup_time <- system.time({
 
-    cl <- makeCluster(no_cores)
-    registerDoParallel(cl)
+      cl <- makeCluster(no_cores)
+      registerDoParallel(cl)
 
-    if (model == "lm") {
-      clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
-    } else if (model == "lmer") {
-      clusterEvalQ(cl, library(lmerTest))
-      clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
-    } else if (model == "cox") {
-      clusterEvalQ(cl, library(survival))
-      clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
-    }
+      if (model == "lm") {
+        clusterExport(cl, varlist = "ewasfun_lm", envir = asNamespace("easyEWAS"))
+      } else if (model == "lmer") {
+        clusterEvalQ(cl, library(lmerTest))
+        clusterExport(cl, varlist = "ewasfun_lmer", envir = asNamespace("easyEWAS"))
+      } else if (model == "cox") {
+        clusterEvalQ(cl, library(survival))
+        clusterExport(cl, varlist = "ewasfun_cox", envir = asNamespace("easyEWAS"))
+      }
 
-  })["elapsed"]
-
-  message("Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
+    })["elapsed"]
+    message("Parallel setup completed in ", round(setup_time, 2), " seconds.\n")
+  } else {
+    message("Single-core mode enabled; parallel cluster setup skipped.\n")
+  }
 
   # --------------------------------
-  # Run parallel EWAS model fitting
+  # Run EWAS model fitting
   # --------------------------------
-  message("Running parallel EWAS model fitting ...")
+  message("Running EWAS model fitting ...")
   ewas_start_time <- Sys.time()
 
+  if (no_cores > 1) {
+    modelres <- foreach(i=1:no_cores, .combine='rbind', .errorhandling = "pass") %dopar%
+      {
+        restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
+        for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
+          restemp[x - (i-1)*chunk.size,] <- as.numeric(
 
+            t(if (model == "lm") {
+              ewasfun_lm(input$Data$Methy[x, ], formula, covdata, facnum)
+            } else if (model == "lmer") {
+              ewasfun_lmer(input$Data$Methy[x, ], formula, covdata, facnum)
+            } else if (model == "cox") {
+              ewasfun_cox(input$Data$Methy[x, ], formula, covdata)
+            })
 
-  modelres <- foreach(i=1:no_cores, .combine='rbind', .errorhandling = "pass") %dopar%
-    {
-      restemp <- matrix(0, nrow=min(chunk.size, len-(i-1)*chunk.size), ncol=result_cols)
-      for(x in ((i-1)*chunk.size+1):min(i*chunk.size, len)) {
-        restemp[x - (i-1)*chunk.size,] <- as.numeric(
-
-          t(if (model == "lm") {
-            ewasfun_lm(input$Data$Methy[x, ], formula, covdata, facnum)
-          } else if (model == "lmer") {
-            ewasfun_lmer(input$Data$Methy[x, ], formula, covdata, facnum)
-          } else if (model == "cox") {
-            ewasfun_cox(input$Data$Methy[x, ], formula, covdata)
-          })
-
-        )
+          )
+        }
+        restemp
       }
-      restemp
-    }
 
-  stopImplicitCluster()
-  stopCluster(cl)
+    stopImplicitCluster()
+    stopCluster(cl)
+  } else {
+    modelres <- matrix(NA_real_, nrow = len, ncol = result_cols)
+    for (x in seq_len(len)) {
+      modelres[x, ] <- as.numeric(
+        t(if (model == "lm") {
+          ewasfun_lm(input$Data$Methy[x, ], formula, covdata, facnum)
+        } else if (model == "lmer") {
+          ewasfun_lmer(input$Data$Methy[x, ], formula, covdata, facnum)
+        } else if (model == "cox") {
+          ewasfun_cox(input$Data$Methy[x, ], formula, covdata)
+        })
+      )
+    }
+  }
   modelres = as.data.frame(modelres)
 
   ewas_end_time <- Sys.time()
-  message(sprintf("Parallel EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
+  message(sprintf("EWAS model fitting completed in %.2f seconds.\n", as.numeric(difftime(ewas_end_time, ewas_start_time, units = "secs"))))
 
   # -----------------------------
   # Post-processing results
@@ -304,22 +330,38 @@ startEWAS = function(input,
   # ---------------------------------
   # Annotate CpG sites with chip info
   # ---------------------------------
+  annotation_applied <- FALSE
   if(!is.null(chipType)){
     message("Start CpG sites annotation ...")
 
-    annotation_df <- .easyEWAS_load_annotation(
-      chipType = chipType,
-      cache_dir = annotation_cache,
-      auto_download = auto_download_annotation,
-      base_url = annotation_base_url
+    annotation_df <- tryCatch(
+      .easyEWAS_load_annotation(
+        chipType = chipType,
+        cache_dir = annotation_cache,
+        auto_download = auto_download_annotation,
+        base_url = annotation_base_url
+      ),
+      error = function(e) {
+        warning(
+          "Annotation loading failed for chipType '", chipType, "'. ",
+          "EWAS results will be returned without annotation columns. ",
+          "Details: ", e$message,
+          call. = FALSE
+        )
+        NULL
+      }
     )
     if (is.null(annotation_df)) {
-      stop("Annotation for chipType '", chipType, "' is not available in local cache.\n",
-           "Please run downloadAnnotEWAS(chipType = '", chipType, "') first,\n",
-           "or set auto_download_annotation = TRUE.")
+      warning(
+        "Annotation for chipType '", chipType, "' is not available. ",
+        "EWAS results will be returned without annotation columns.\n",
+        "You can pre-download with downloadAnnotEWAS(chipType = '", chipType, "').",
+        call. = FALSE
+      )
+    } else {
+      modelres <- dplyr::left_join(modelres, annotation_df, by = "probe")
+      annotation_applied <- TRUE
     }
-
-    modelres <- dplyr::left_join(modelres, annotation_df, by = "probe")
   }
 
   if (!is.null(chipType)) {
@@ -331,7 +373,11 @@ startEWAS = function(input,
                          "MSA"    = "hg19 (GRCh37)",
                          "Unknown genome"
     )
-    message(sprintf("Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
+    if (annotation_applied) {
+      message(sprintf("Using annotation for chip type: %s (Genome: %s)\n", chipType, chipGenome))
+    } else {
+      message(sprintf("Proceeding without annotation columns for chip type: %s (Genome: %s)\n", chipType, chipGenome))
+    }
   }
 
 
@@ -339,15 +385,21 @@ startEWAS = function(input,
   # Save results to CSV
   # -----------------------------
   modelres -> input$result
-  output_path <- if (filename == "default") {
-    file.path(input$outpath, "ewasresult.csv")
+  if (.easyEWAS_export_enabled(input)) {
+    out_dir <- .easyEWAS_output_dir(input)
+    output_path <- if (filename == "default") {
+      file.path(out_dir, "ewasresult.csv")
+    } else {
+      file.path(out_dir, paste0(filename, ".csv"))
+    }
+    vroom::vroom_write(modelres, output_path, delim = ",")
+    msg <- paste0("EWAS analysis has been completed! You can find results in ", out_dir, ".\n")
   } else {
-    file.path(input$outpath, paste0(filename, ".csv"))
+    msg <- "EWAS analysis has been completed! Result is stored in input$result (file export disabled).\n"
   }
-  vroom::vroom_write(modelres, output_path, delim = ",")
 
   lubridate::now() -> NowTime
-  message(paste0("EWAS analysis has been completed! You can find results in ",input$outpath, ".\n", NowTime))
+  message(paste0(msg, NowTime))
 
   tictoc::toc()
 

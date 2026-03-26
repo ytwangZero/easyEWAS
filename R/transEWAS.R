@@ -12,11 +12,11 @@
 #' @importFrom magrittr %>%
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' }
+#' class(res$Data$Expo$cov1)
 transEWAS <- function(input,
                       Vars = "default",
                       TypeTo = "factor" #numeric, factor

@@ -46,12 +46,28 @@
 #' @importFrom vroom vroom_write
 #' @importFrom tictoc tic toc
 #' @importFrom lubridate now
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples \donttest{
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' res <- dmrEWAS(input = res, filename = "default", chipType = "EPICV2", what = "Beta", expo = "var",
-#' cov = "cov1,cov2", genome = "hg38",)
+#' if (interactive() &&
+#'     requireNamespace("DMRcate", quietly = TRUE) &&
+#'     requireNamespace("ExperimentHub", quietly = TRUE) &&
+#'     requireNamespace("AnnotationHub", quietly = TRUE)) {
+#'   hub_cache <- file.path(tempdir(), "bioc-hub-cache")
+#'   dir.create(hub_cache, recursive = TRUE, showWarnings = FALSE)
+#'   ExperimentHub::setExperimentHubOption("CACHE", hub_cache)
+#'   AnnotationHub::setAnnotationHubOption("CACHE", hub_cache)
+#'   res <- dmrEWAS(
+#'     input = res,
+#'     filename = "default",
+#'     chipType = "EPICV2",
+#'     what = "Beta",
+#'     expo = "var",
+#'     cov = "cov1,cov2",
+#'     genome = "hg38"
+#'   )
+#' }
 #' }
 #'
 
@@ -138,11 +154,17 @@ dmrEWAS = function(input,
 
   # save result ---
   outfile <- if (filename == "default") "DMRresult.csv" else paste0(filename, ".csv")
-  vroom::vroom_write(input$dmrres, file.path(input$outpath, outfile), delim = ",")
+  if (.easyEWAS_export_enabled(input)) {
+    out_dir <- .easyEWAS_output_dir(input)
+    out_file <- file.path(out_dir, outfile)
+    vroom::vroom_write(input$dmrres, out_file, delim = ",")
+    message("DMR result has been saved to: ", out_file)
+  } else {
+    message("DMR result is stored in input$dmrres (file export disabled).")
+  }
 
 
   lubridate::now()  -> NowTime
-  message("DMR result has been saved to: ", file.path(input$outpath, outfile))
   message("DMR analysis completed successfully.")
   message("Timestamp: ", NowTime)
   tictoc::toc()

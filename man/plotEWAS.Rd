@@ -253,7 +253,10 @@ the default is TRUE.}
 \item{verbose}{whether to print the log information.}
 }
 \value{
-The updated input object, including CMplot-ready data stored in input$CMplot.
+The updated input object, including CMplot-ready data stored in
+\code{input$CMplot} and plotting arguments stored in \code{input$plot_args}. When
+files are not exported, a replayable plot may also be stored in
+\code{input$plot_record} for the current R session.
 }
 \description{
 Visualize EWAS results based on the \code{\link[CMplot]{CMplot}} package, including Manhattan
@@ -263,11 +266,12 @@ in \code{\link[CMplot]{CMplot}} For more detailed information or to create multi
 plots, please refer to \code{\link[CMplot]{CMplot}} (https://cran.r-project.org/web/packages/CMplot/index.html).
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
-res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
-res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "var", adjustP = TRUE)
-res <- plotEWAS(input = res, p = "PVAL")
-}
+res <- initEWAS(export = FALSE)
+res$result <- data.frame(
+  probe = paste0("cg", seq_len(50)),
+  chr = rep(c("1", "2"), each = 25),
+  pos = seq_len(50) * 1000,
+  PVAL = seq(0.001, 0.05, length.out = 50)
+)
+res <- plotEWAS(input = res, p = "PVAL", plot.type = "m", file.output = FALSE)
 }

@@ -84,13 +84,21 @@ input, An R6 class object integrating all information.
 Perform GO or KEGG enrichment analysis based on the \pkg{clusterProfiler} package.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+\donttest{
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-res <- plotEWAS(input = res, pval = "PVAL")
-res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
-res <- enrichEWAS(input = res, method = "GO", filterP = "PVAL", cutoff = 0.05, pAdjustMethod = "BH")
+if (requireNamespace("clusterProfiler", quietly = TRUE) &&
+    requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+  res <- startEWAS(
+    input = res, chipType = NULL, model = "lm",
+    expo = "default", adjustP = TRUE, core = 1
+  )
+  res$result$gene <- "BRCA1"
+  res <- enrichEWAS(
+    input = res, method = "GO", filterP = "PVAL",
+    cutoff = 1, pAdjustMethod = "BH", plot = FALSE
+  )
+}
 }
 }

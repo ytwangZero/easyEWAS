@@ -6,7 +6,7 @@
 \alias{easyEWAS-package}
 \title{easyEWAS package}
 \description{
-Tools for conducting Epigenome-Wide Association Study (EWAS) and visualizing results. Users provide sample metadata and methylation matrices to run EWAS with linear models, linear mixed-effects models, or Cox models. The package supports downstream visualization, bootstrap validation, enrichment analysis, and DMR analysis with optional parallel computing.
+Tools for conducting epigenome-wide association studies (EWAS) and visualizing results. Users provide sample metadata and methylation matrices to run EWAS with linear models, linear mixed-effects models, or Cox models. The package supports downstream visualization, bootstrap validation, enrichment analysis, batch effect correction, and differentially methylated region (DMR) analysis with optional parallel computing. Methods are described in Wang et al. (2025) \doi{10.1093/bioadv/vbaf026}, Johnson et al. (2007) \doi{10.1093/biostatistics/kxj037}, and Peters et al. (2015) \doi{10.1186/1756-8935-8-6}.
 }
 \seealso{
 Useful links:

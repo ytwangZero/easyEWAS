@@ -4,23 +4,27 @@
 \alias{initEWAS}
 \title{Initialize the EWAS module}
 \usage{
-initEWAS(outpath = "default")
+initEWAS(outpath = NULL, export = FALSE)
 }
 \arguments{
-\item{outpath}{The user-specified path is used to store a generated folder named "EWASresult"
-that contains all the analysis results. If "default" is specified, the folder will be generated
-in the current working directory.}
+\item{outpath}{Optional path to an existing directory. When \code{export = TRUE},
+a subdirectory named \code{"EWASresult"} is created under \code{outpath} for exported
+result files.}
+
+\item{export}{Logical. If \code{TRUE}, create an output folder and export result
+files. If \code{FALSE} (default), do not write files to disk; keep results in the
+returned object.}
 }
 \value{
 input, an R6 class object integrating all information.
 }
 \description{
-This function is designed to generate an R6 class for storing all the data
-and results of EWAS analysis, and also to create a folder on the local computer for
-storing the analysis results.
+This function generates an R6 class for storing EWAS analysis
+data and results. By default, results are kept in memory and no files are
+written. If file export is requested, users must supply an explicit output
+directory.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
-}
+res <- initEWAS(export = FALSE)
+res
 }

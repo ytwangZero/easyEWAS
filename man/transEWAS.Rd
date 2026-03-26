@@ -21,9 +21,8 @@ input, An R6 class object integrating all information.
 Transform the variable types of sample data to the types specified by users.
 }
 \examples{
-\dontrun{
-res <- initEWAS(outpath = "default")
+res <- initEWAS(export = FALSE)
 res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-}
+class(res$Data$Expo$cov1)
 }

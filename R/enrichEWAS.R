@@ -41,14 +41,22 @@
 #' @importFrom tictoc tic toc
 #' @importFrom vroom vroom_write
 #' @importFrom R.utils setOption
-#' @examples \dontrun{
-#' res <- initEWAS(outpath = "default")
+#' @examples \donttest{
+#' res <- initEWAS(export = FALSE)
 #' res <- loadEWAS(input = res, ExpoData = "default", MethyData = "default")
 #' res <- transEWAS(input = res, Vars = "cov1", TypeTo = "factor")
-#' res <- startEWAS(input = res, chipType = "EPICV2", model = "lm", expo = "default", adjustP = TRUE)
-#' res <- plotEWAS(input = res, pval = "PVAL")
-#' res <- bootEWAS(input = res, filterP = "PVAL", cutoff = 0.05, times = 100)
-#' res <- enrichEWAS(input = res, method = "GO", filterP = "PVAL", cutoff = 0.05, pAdjustMethod = "BH")
+#' if (requireNamespace("clusterProfiler", quietly = TRUE) &&
+#'     requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+#'   res <- startEWAS(
+#'     input = res, chipType = NULL, model = "lm",
+#'     expo = "default", adjustP = TRUE, core = 1
+#'   )
+#'   res$result$gene <- "BRCA1"
+#'   res <- enrichEWAS(
+#'     input = res, method = "GO", filterP = "PVAL",
+#'     cutoff = 1, pAdjustMethod = "BH", plot = FALSE
+#'   )
+#' }
 #' }
 
 enrichEWAS <- function(input,
@@ -151,7 +159,13 @@ enrichEWAS <- function(input,
   }
 
   outfile <- if (filename == "default") "enrichresult.csv" else paste0(filename, ".csv")
-  vroom::vroom_write(input$enrichres, file.path(input$outpath, outfile), delim = ",")
+  if (.easyEWAS_export_enabled(input)) {
+    out_dir <- .easyEWAS_output_dir(input)
+    out_file <- file.path(out_dir, outfile)
+    vroom::vroom_write(input$enrichres, out_file, delim = ",")
+  } else {
+    out_dir <- NULL
+  }
 
 
   if (plot) {
@@ -172,8 +186,11 @@ enrichEWAS <- function(input,
                        })
 
       # Compose the full file name
-      file_name <- file.path(input$outpath,
-                             if (filename == "default") suffix else paste0(filename, ".pdf"))
+      file_name <- if (.easyEWAS_export_enabled(input)) {
+        file.path(out_dir, if (filename == "default") suffix else paste0(filename, ".pdf"))
+      } else {
+        NULL
+      }
 
       if (identical(plotType, "dot") && !requireNamespace("enrichplot", quietly = TRUE)) {
         stop(
@@ -183,7 +200,6 @@ enrichEWAS <- function(input,
       }
 
       # Generate the appropriate plot
-      pdf(file = file_name, width = width, height = height)
       p <- switch(plotType,
                   "dot" = enrichplot::dotplot(enres,
                                               x = x,
@@ -194,16 +210,25 @@ enrichEWAS <- function(input,
                                   color = plotcolor,
                                   showCategory = showCategory)
       )
-      print(p)
-      dev.off()
-
-      message("Plot saved to: ", file_name)
+      input$enrichplot <- p
+      if (.easyEWAS_export_enabled(input)) {
+        pdf(file = file_name, width = width, height = height)
+        print(p)
+        dev.off()
+        message("Plot saved to: ", file_name)
+      } else {
+        message("Plot object is stored in input$enrichplot (file export disabled).")
+      }
     }
   }
 
 
   lubridate::now()  -> NowTime
-  message(paste0("Enrichment analysis has been completed! \nYou can find results in ",input$outpath, ".\n", NowTime))
+  if (.easyEWAS_export_enabled(input)) {
+    message(paste0("Enrichment analysis has been completed! \nYou can find results in ", out_dir, ".\n", NowTime))
+  } else {
+    message(paste0("Enrichment analysis has been completed! \nResults are stored in input$enrichres.\n", NowTime))
+  }
 
   tictoc::toc()
 
