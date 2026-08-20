@@ -7,7 +7,7 @@
 #'
 #' @param input An R6 class integrated with all the information obtained from the startEWAS or
 #' plotEWAS function.
-#' @param filterP The name of the p value columns such as "PVAL", "FDR", and "Bonfferoni." Users use
+#' @param filterP The name of the p value columns such as "PVAL", "FDR", and "Bonferroni." Users use
 #' this P-value to screen for significance sites and further conduct internal validation.
 #' @param cutoff The cutoff value of the P-value used to filter for further internal validation.
 #' The default is 0.05.
@@ -43,7 +43,7 @@
 #' )
 #' res <- bootEWAS(input = res, CpGs = res$result$probe[1], times = 5, seed = 1)
 bootEWAS = function(input,
-                    filterP = "PVAL", # FDR, Bonfferoni
+                    filterP = "PVAL", # FDR, Bonferroni
                     cutoff = 0.05,
                     CpGs = NULL,
                     times = 500,

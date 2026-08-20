@@ -11,7 +11,7 @@ bootCI = "perc", filename = "default", seed = NULL)
 \item{input}{An R6 class integrated with all the information obtained from the startEWAS or
 plotEWAS function.}
 
-\item{filterP}{The name of the p value columns such as "PVAL", "FDR", and "Bonfferoni." Users use
+\item{filterP}{The name of the p value columns such as "PVAL", "FDR", and "Bonferroni." Users use
 this P-value to screen for significance sites and further conduct internal validation.}
 
 \item{cutoff}{The cutoff value of the P-value used to filter for further internal validation.

@@ -4,7 +4,7 @@
 #' @param input An R6 class integrated with all the information obtained from the startEWAS or plotEWAS
 #' or bootEWAS function.
 #' @param method Methods of enrichment analysis, including "GO" and "KEGG".
-#' @param filterP The name of the p value columns such as "PVAL", "FDR", and "Bonfferoni." Users use
+#' @param filterP The name of the p value columns such as "PVAL", "FDR", and "Bonferroni." Users use
 #' this P-value to screen for significance sites and further conduct enrichment analysis.
 #' @param cutoff The cutoff value of the P-value used to filter for further enrichment analysis.
 #' The default is 0.05.

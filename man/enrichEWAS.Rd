@@ -33,7 +33,7 @@ or bootEWAS function.}
 
 \item{method}{Methods of enrichment analysis, including "GO" and "KEGG".}
 
-\item{filterP}{The name of the p value columns such as "PVAL", "FDR", and "Bonfferoni." Users use
+\item{filterP}{The name of the p value columns such as "PVAL", "FDR", and "Bonferroni." Users use
 this P-value to screen for significance sites and further conduct enrichment analysis.}
 
 \item{cutoff}{The cutoff value of the P-value used to filter for further enrichment analysis.

@@ -271,7 +271,7 @@ startEWAS = function(input,
 
       ## FDR pr Bonferroni adjustment---
       if(adjustP){
-        FDRname = paste(rep(c("FDR","Bonfferoni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
+        FDRname = paste(rep(c("FDR","Bonferroni"),each = (facnum-1)),rep(1:(facnum-1),2), sep = "_")
         pindex = grep("PVAL",colnames(modelres))
         FDR = matrix(0,nrow = nrow(modelres),ncol = length(FDRname))
         for(i in pindex){
@@ -279,7 +279,7 @@ startEWAS = function(input,
           FDR[,((i-1)/3)+(facnum-1)] = p.adjust(modelres[[i]],method = "bonferroni")
         }
         FDR <- as.data.frame(FDR)
-        colnames(FDR) <- paste(rep(c("FDR", "Bonfferoni"), each = (facnum - 1)),
+        colnames(FDR) <- paste(rep(c("FDR", "Bonferroni"), each = (facnum - 1)),
                                rep(1:(facnum - 1), 2), sep = "_")
 
         modelres = cbind(modelres,FDR)
@@ -305,7 +305,7 @@ startEWAS = function(input,
       ## FDR pr Bonferroni adjustment---
       if(adjustP){
         modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
-        modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
+        modelres$Bonferroni = p.adjust(modelres$PVAL,method = "bonferroni")
         message("Multiple testing correction completed!\n")
       }
 
@@ -321,7 +321,7 @@ startEWAS = function(input,
     ##  FDR pr Bonferroni adjustment---
     if(adjustP){
       modelres$FDR = p.adjust(modelres$PVAL, method = "BH")
-      modelres$Bonfferoni = p.adjust(modelres$PVAL,method = "bonferroni")
+      modelres$Bonferroni = p.adjust(modelres$PVAL,method = "bonferroni")
       message("Multiple testing correction completed!\n")
     }
   }
